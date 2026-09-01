@@ -20,20 +20,19 @@ jobs:
           script: |
             echo "=== Starting 6T MATH Backend Deployment ==="
             TARGET_DIR="/var/www/backend-6t-math"
-            
-            # 1. Clone repository if not exists, otherwise pull latest changes
-            if [ ! -d "$TARGET_DIR/.git" ]; then
-              echo "Cloning repository..."
-              mkdir -p /var/www
-              git clone https://github.com/dodd-maindev/Backend_6T_Math.git $TARGET_DIR
-            else
-              echo "Pulling latest code from main branch..."
-              cd $TARGET_DIR
-              git fetch origin main
-              git reset --hard origin/main
+            mkdir -p "$TARGET_DIR"
+            cd "$TARGET_DIR"
+
+            # 1. Initialize or sync with git repository
+            if [ ! -d ".git" ]; then
+              echo "Initializing Git in existing directory..."
+              git init
+              git remote add origin https://github.com/dodd-maindev/Backend_6T_Math.git || git remote set-url origin https://github.com/dodd-maindev/Backend_6T_Math.git
             fi
 
-            cd $TARGET_DIR
+            echo "Fetching and resetting to latest origin/main..."
+            git fetch origin main
+            git reset --hard origin/main
 
             # 2. Build and restart service
             if command -v docker &> /dev/null && [ -f "docker-compose.yml" ]; then
