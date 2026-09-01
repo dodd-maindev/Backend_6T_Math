@@ -19,7 +19,7 @@ async fn main() {
     let pool = db::establish_connection(&config.database_url).await;
     db::run_migrations(&pool).await;
 
-    // 2. Seed default administrator
+    // 2. Seed default administrator securely from environment variables
     seed_admin(&pool).await;
 
     // 3. Configure CORS with cookie credentials support for localhost and production domains
@@ -56,23 +56,17 @@ async fn main() {
     axum::serve(listener, app).await.expect("Failed to start server");
 }
 
-/// Seeds administrator accounts if not present in the database.
+/// Seeds administrator accounts securely from environment variables without hardcoding.
 async fn seed_admin(pool: &sqlx::PgPool) {
-    let admins = [
-        ("admin@6tmath.vn", "adminpassword"),
-        ("hongxuan", "HongXuan@6TMath#2026!Secure"),
-        ("hongxuan@6tmath.vn", "HongXuan@6TMath#2026!Secure"),
-    ];
+    let email = std::env::var("ADMIN_EMAIL").unwrap_or_else(|_| "admin@6tmath.vn".to_string());
+    let password = std::env::var("ADMIN_PASSWORD").unwrap_or_else(|_| "adminpassword".to_string());
 
-    for (user, pass) in admins {
-        let exists: bool = sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)")
-            .bind(user).fetch_one(pool).await.unwrap_or(false);
-        if !exists {
-            if let Ok(hash) = utils::hash::hash_password(pass) {
-                let _ = sqlx::query("INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'admin')")
-                    .bind(user).bind(hash).execute(pool).await;
-                println!("Administrator user seeded: {}", user);
-            }
-        }
+    if let Ok(hash) = utils::hash::hash_password(&password) {
+        let _ = sqlx::query(
+            "INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'admin') \
+             ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, role = 'admin'"
+        )
+        .bind(&email).bind(hash).execute(pool).await;
+        println!("Administrator user initialized securely from env: {}", email);
     }
 }
