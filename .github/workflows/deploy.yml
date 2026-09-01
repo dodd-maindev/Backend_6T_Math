@@ -9,18 +9,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via SSH to VPS
+      - name: Deploy via SSH Key to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
           script: |
-            set -e
             echo "=== Starting 6T MATH Backend Deployment ==="
-            
             TARGET_DIR="/var/www/backend-6t-math"
             
             # 1. Clone repository if not exists, otherwise pull latest changes
@@ -38,12 +36,10 @@ jobs:
             cd $TARGET_DIR
 
             # 2. Build and restart service
-            # If using Docker Compose:
             if command -v docker &> /dev/null && [ -f "docker-compose.yml" ]; then
               echo "Deploying via Docker Compose..."
               docker compose up -d --build
             else
-              # If using Native Cargo + Systemd:
               echo "Deploying via Native Systemd..."
               source "$HOME/.cargo/env" || export PATH="$HOME/.cargo/bin:$PATH"
               cargo build --release
