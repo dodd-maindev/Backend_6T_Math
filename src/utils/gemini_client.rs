@@ -19,39 +19,41 @@ impl GeminiClient {
     pub async fn evaluate_submission(&self, system_instruction: &str, parts: Vec<Value>) -> Result<Value, String> {
         let candidate_models = ModelRegistry::load_candidate_models(Some(&self.preferred_model)).await;
         let payload = Self::build_payload(system_instruction, parts);
-        let client = Client::new();
+        let client = Client::builder().timeout(std::time::Duration::from_secs(45)).build().unwrap_or_default();
         let mut last_error = String::from("No models available");
 
         for model in &candidate_models {
-            let (key_idx, api_key) = self.pool.acquire_key().map_err(|e| e)?;
+            let (key_idx, api_key) = match self.pool.acquire_key() { Ok(k) => k, Err(e) => return Err(e) };
             let url = format!("https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}", model, api_key);
 
             match client.post(&url).json(&payload).send().await {
                 Ok(resp) => {
                     let status = resp.status();
                     let text = resp.text().await.unwrap_or_default();
-                    if status == StatusCode::TOO_MANY_REQUESTS || text.contains("RESOURCE_EXHAUSTED") || text.contains("rate limit") {
-                        eprintln!("[RateLimit Fallback] Model '{}' rate limited (status {}). Switching Key/Model...", model, status);
-                        self.pool.mark_rate_limited(key_idx);
-                        last_error = format!("Model {} on Key #{} rate limited", model, key_idx + 1);
+                    if !status.is_success() || text.contains("RESOURCE_EXHAUSTED") || text.contains("rate limit") {
+                        if status == StatusCode::TOO_MANY_REQUESTS || text.contains("RESOURCE_EXHAUSTED") {
+                            self.pool.mark_rate_limited(key_idx);
+                        }
+                        eprintln!("[Fallback] Model '{}' (Status {}) on Key #{}. Trying next model...", model, status, key_idx + 1);
+                        last_error = format!("Status {} on {}: {}", status, model, text.chars().take(80).collect::<String>());
                         continue;
                     }
                     if let Ok(res_json) = serde_json::from_str::<Value>(&text) {
                         if let Some(err) = res_json.get("error") {
-                            let msg = err["message"].as_str().unwrap_or("Unknown Gemini Error");
-                            if msg.contains("quota") || msg.contains("limit") || msg.contains("exhausted") {
-                                eprintln!("[Quota Fallback] Model '{}' quota error on Key #{}. Switching...", model, key_idx + 1);
-                                self.pool.mark_rate_limited(key_idx);
-                                last_error = format!("Quota error: {}", msg);
-                                continue;
-                            }
-                            return Err(format!("Gemini API Error: {}", msg));
+                            eprintln!("[Model Error Fallback] Model '{}' returned error: {:?}. Trying next...", model, err);
+                            last_error = format!("Gemini Error on {}: {:?}", model, err);
+                            continue;
                         }
-                        if let Some(content) = res_json["candidates"][0]["content"]["parts"][0]["text"].as_str() {
-                            return serde_json::from_str(content).map_err(|e| format!("JSON parse error: {}", e));
+                        if let Some(candidate) = res_json.get("candidates").and_then(|c| c.get(0)) {
+                            if let Some(text_content) = candidate.get("content").and_then(|c| c.get("parts")).and_then(|p| p.get(0)).and_then(|p| p.get("text")).and_then(|t| t.as_str()) {
+                                let clean_json = text_content.trim().trim_start_matches("```json").trim_start_matches("```").trim_end_matches("```").trim();
+                                if let Ok(parsed) = serde_json::from_str::<Value>(clean_json) {
+                                    return Ok(parsed);
+                                }
+                            }
                         }
                     }
-                    last_error = format!("Invalid response from {}: {}", model, text);
+                    last_error = format!("Invalid response format from {}", model);
                 }
                 Err(e) => {
                     eprintln!("[Network Fallback] Model '{}' error: {}. Trying next...", model, e);
@@ -59,7 +61,7 @@ impl GeminiClient {
                 }
             }
         }
-        Err(format!("All candidate Gemini models/keys failed. Last error: {}", last_error))
+        Err(format!("All candidate Gemini models failed. Last error: {}", last_error))
     }
 
     fn build_payload(sys: &str, parts: Vec<Value>) -> Value {

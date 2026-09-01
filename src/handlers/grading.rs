@@ -62,7 +62,7 @@ pub async fn grade_submission(
     Ok((StatusCode::CREATED, Json(sub)))
 }
 
-/// Evaluates full exam with Cloudflare Turnstile bot verification and total attempt limiter.
+/// Evaluates full exam with Cloudflare Turnstile bot verification and guaranteed complete evaluation.
 pub async fn grade_full_exam(
     State(pool): State<PgPool>,
     user: AuthenticatedUser,
@@ -90,12 +90,12 @@ pub async fn grade_full_exam(
 
     for q in questions {
         let (g, f) = (Arc::clone(&grader), Arc::clone(&files_arc));
-        set.spawn(async move { g.grade_question(&q, &f, true).await });
+        set.spawn(async move { (q.question_number, g.grade_question(&q, &f, true).await) });
     }
 
     let mut saved_subs = Vec::new();
     while let Some(res) = set.join_next().await {
-        if let Ok(Ok(mut fb)) = res {
+        if let Ok((_qn, Ok(mut fb))) = res {
             fb["student_image_urls"] = json!(form.file_urls);
             let score = fb["score"].as_f64().unwrap_or(0.0);
             if let Ok(sub) = sqlx::query_as::<_, StudentSubmission>(
@@ -105,5 +105,6 @@ pub async fn grade_full_exam(
             }
         }
     }
+    saved_subs.sort_by_key(|s| s.feedback.get("question_number").and_then(|v| v.as_i64()).unwrap_or(0));
     Ok((StatusCode::CREATED, Json(saved_subs)))
 }
