@@ -56,24 +56,23 @@ async fn main() {
     axum::serve(listener, app).await.expect("Failed to start server");
 }
 
-/// Seeds a default admin account if no admin is present in the database.
+/// Seeds administrator accounts if not present in the database.
 async fn seed_admin(pool: &sqlx::PgPool) {
-    let admin_exists: bool = sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM users WHERE role = 'admin')")
-        .fetch_one(pool)
-        .await
-        .unwrap_or(false);
+    let admins = [
+        ("admin@6tmath.vn", "adminpassword"),
+        ("hongxuan", "HongXuan@6TMath#2026!Secure"),
+        ("hongxuan@6tmath.vn", "HongXuan@6TMath#2026!Secure"),
+    ];
 
-    if !admin_exists {
-        let password_hash = utils::hash::hash_password("adminpassword")
-            .expect("Failed to hash default admin password");
-
-        sqlx::query("INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'admin')")
-            .bind("admin@6tmath.vn")
-            .bind(password_hash)
-            .execute(pool)
-            .await
-            .expect("Failed to seed administrator user");
-
-        println!("Default administrator account seeded: admin@6tmath.vn / adminpassword");
+    for (user, pass) in admins {
+        let exists: bool = sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)")
+            .bind(user).fetch_one(pool).await.unwrap_or(false);
+        if !exists {
+            if let Ok(hash) = utils::hash::hash_password(pass) {
+                let _ = sqlx::query("INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'admin')")
+                    .bind(user).bind(hash).execute(pool).await;
+                println!("Administrator user seeded: {}", user);
+            }
+        }
     }
 }
