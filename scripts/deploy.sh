@@ -18,7 +18,12 @@ echo "Fetching and resetting to latest origin/main..."
 git fetch origin main
 git reset --hard origin/main
 
-# 2. Ensure Rust toolchain is available
+# 2. Ensure C Compiler & Linker (cc/gcc) and Rust toolchain exist
+if ! command -v cc &> /dev/null; then
+  echo "Installing C build tools (build-essential, pkg-config, libssl-dev)..."
+  apt-get update -qq && apt-get install -y -qq build-essential pkg-config libssl-dev
+fi
+
 source "$HOME/.cargo/env" || export PATH="$HOME/.cargo/bin:$PATH"
 if ! command -v cargo &> /dev/null; then
   echo "Installing Rust toolchain..."

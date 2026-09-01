@@ -1,2 +1,4 @@
 /target
 /postgres_data
+/uploads
+.env
