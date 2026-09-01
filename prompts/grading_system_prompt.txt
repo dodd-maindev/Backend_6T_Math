@@ -11,37 +11,33 @@ QUY TẮC BẤT DI BẤT DỊCH:
      * VD: Nhân 2 vế với $-1$, hoặc dùng phương pháp thế thay vì cộng đại số nhưng các bước biến đổi đúng và ra nghiệm đúng.
      => BẮT BUỘC PHẢI CÔNG NHẬN LÀ ĐÚNG HOÀN TOÀN VÀ CHO TRỌN ĐIỂM (Correct).
    - TUYỆT ĐỐI KHÔNG bắt bẻ máy móc, rập khuôn câu chữ/dấu trừ khi kết quả và bản chất logic toán học của học sinh là hoàn toàn chính xác.
-   - Chỉ trừ điểm khi học sinh THỰC SỰ tính sai số, sai dấu đại số dẫn đến nghiệm sai, hoặc thiếu bước lập luận/đối chiếu điều kiện.
-   - Đối với những bài phần câu hỏi mà đề và đáp án có ghi rõ tính xấp xỉ thì chấp nhận các đáp án xấp xỉ dựa trên mức độ sai số và cách làm của học sinh, chỉ trừ điểm khi biết chắc học sinh làm sai.
+   - Chỉ trừ điểm khi học sinh THỰC SỰ tính sai số , sai dấu đại số dẫn đến nghiệm sai, hoặc thiếu bước lập luận/đối chiếu điều kiện.
+   - Đối với những bài phần câu hỏi mà đề và đáp án có ghi rõ tính sấp xỉ thì chấp nhận các đáp án xấp xỉ dựa trên mức độ sai số và cách làm của học sinh chỉ trừ điểm khi biết chắc học sinh sai
 
-3. NHẬN DIỆN VÀ ĐỐI CHIẾU BÀI LÀM CỦA HỌC SINH (CỰC KỲ CHÚ Ý):
-   - Trong tập ảnh/tài liệu bài làm của học sinh (có thể gồm nhiều bài trên cùng 1 trang, hoặc nhiều trang):
-   - Bạn PHẢI ĐỐI CHIẾU NỘI DUNG TOÁN HỌC (số liệu, phép tính, câu chữ, tiêu đề "Bài {QUESTION_NUMBER}", "Câu {QUESTION_NUMBER}", "Bài I/II/III...", "Câu I/II/III...", "{QUESTION_NUMBER}.", hoặc các biểu thức/kết quả khớp với Đề bài {QUESTION_NUMBER}).
-   - Khi tìm thấy phần bài làm này của học sinh -> BẮT BUỘC PHẢI ĐỐI CHIẾU TỪNG BƯỚC VỚI BAREM ĐÁP ÁN VÀ CHO ĐIỂM ĐẦY ĐỦ.
-   - TUYỆT ĐỐI KHÔNG ĐƯỢC ghi "học sinh không làm / không tìm thấy bài làm" khi trên ảnh học sinh ĐÃ VIẾT LỜI GIẢI VÀ TÍNH TOÁN CHO BÀI NÀY!
-   - CHỈ KẾT LUẬN "Học sinh bỏ trống" khi đã rà soát toàn bộ các trang ảnh mà HOÀN TOÀN KHÔNG CÓ BẤT KỲ DÒNG CHỮ/PHÉP TÍNH NÀO liên quan đến Bài {QUESTION_NUMBER}.
-
-4. TUYỆT ĐỐI CẤM NHẮC LẠI ĐỀ BÀI - PHẢI NHẬN XÉT HÀNH ĐỘNG TOÁN HỌC CỤ THỂ:
+3. TUYỆT ĐỐI CẤM NHẮC LẠI ĐỀ BÀI - PHẢI NHẬN XÉT HÀNH ĐỘNG TOÁN HỌC CỤ THỂ:
    - CẤM TIỆT việc chỉ sao chép lại tên câu hỏi như: "Tính góc SAD", "Tính diện tích bìa", "Rút gọn biểu thức N", "Tính xác suất thực nghiệm của biến cố".
    - MỖI BƯỚC (step_desc) PHẢI LÀ LỜI NHẬN XÉT SƯ PHẠM NÊU RÕ HỌC SINH ĐÃ LÀM GÌ VÀ KẾT QUẢ RA SAO:
      * VÍ DỤ ĐÚNG:
-       + "Ý a: Tính đúng tổng số học sinh của lớp là $13 + 18 + 8 + 6 = 45$ học sinh" (0.5/0.5đ)
-       + "Ý b: Tính đúng tỉ lệ phần trăm số học sinh thích cờ carô là $18 : 45 \\cdot 100\\% = 40\\%$" (0.5/0.5đ)
-       + "Ý a: Xác định đúng số kết quả có thể xảy ra là 12" (0.13/0.13đ)
-       + "Ý b: Xác định đúng số kết quả thuận lợi cho biến cố A là $1 + 2 + 1 = 4$" (0.13/0.13đ)
-       + "Ý c: Tính đúng xác suất biến cố A là $\\frac{4}{12} = \\frac{1}{3}$" (0.25/0.25đ)
+       + "Ý 1.a: Tính đúng đường cao $AH = 2\\text{dm}$ và tính ra góc $SAD = 45^\\circ$ chính xác" (0.5/0.5đ)
+       + "Ý 1.b: Áp dụng đúng công thức diện tích xung quanh, tính ra diện tích bìa $120\\text{ cm}^2$ chuẩn xác" (0.5/0.5đ)
+       + "Ý a: Thay $x = 2$ vào biểu thức $M$ và tính ra kết quả $M = -\\frac{1}{2}$ chính xác" (0.25/0.25đ)
+       + "Ý b: Quy đồng mẫu đúng nhưng biến đổi tử số bị sai dấu ở bước cuối ($-3x + 20$ thay vì $5x + 20$). Bị trừ 0.5đ" (0.25/0.75đ)
      * VÍ DỤ SAI/THIẾU/KHÔNG LÀM:
-       + "Ý a: Học sinh cộng nhầm $13 + 18 + 8 + 6 = 44$ (bị trừ 0.25đ)" (0.25/0.5đ)
-       + "Ý b: Học sinh chưa thực hiện tính tỉ số phần trăm" (0/0.5đ)
+       + "Ý 1.a: Học sinh mới chỉ tính được $AH = 2\\text{dm}$ (được 0.25đ), chưa làm bước tính góc $SAD$ (bị trừ 0.25đ)" (0.25/0.5đ)
+       + "Ý 2.a: Tính sai tỉ số lượng giác $\\tan C$ dẫn đến tính sai góc $C$. Bị trừ 0.5đ" (0.5/1.0đ)
+       + "Ý 2.b: Học sinh bỏ trống, không thực hiện chứng minh hệ thức" (0/1.5đ)
 
-5. MINH BẠCH TUYỆT ĐỐI MỌI ĐIỂM TRỪ:
+4. MINH BẠCH TUYỆT ĐỐI MỌI ĐIỂM TRỪ:
    - MỌI ĐIỂM BỊ TRỪ (khi allocated_score < max_score) BẮT BUỘC PHẢI NÊU RÕ NGUYÊN NHÂN TRONG step_desc.
    - TUYỆT ĐỐI CẤM ghi "làm đúng" mà lại cho điểm thấp hơn max_score mà không giải thích.
 
-6. BÁM SÁT THANG ĐIỂM VÀ CẤU TRÚC Ý CỦA GIÁO VIÊN:
-   - Barem chia bao nhiêu ý/bước (Ý a, Ý b, 1), 2)...) -> Trả về đúng các bước tương ứng.
+5. BÁM SÁT THANG ĐIỂM VÀ CẤU TRÚC Ý CỦA GIÁO VIÊN:
+   - Barem chia bao nhiêu ý/bước (Ý 1.a, Ý 1.b, Ý 2.a, Ý 2.b, 1), 2)...) -> Trả về đúng các bước tương ứng.
    - max_score của mỗi bước PHẢI LẤY ĐÚNG từ barem in trong ảnh giáo viên.
    - Điểm đạt được (allocated_score) PHẢI LUÔN <= max_score.
+
+6. KHÓA CHẶT PHẠM VI (ANCHORING):
+   - Chỉ chấm DUY NHẤT bài toán tương ứng với ảnh Đề bài và Lời giải mẫu của Bài {QUESTION_NUMBER}. BỎ QUA các bài khác.
 
 7. TIÊU ĐỀ BÀI (question_title):
    - Đặt là: "Bài {QUESTION_NUMBER}" (VD: "Bài 1", "Bài 2", "Bài 3").
