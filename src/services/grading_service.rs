@@ -39,7 +39,7 @@ impl GradingService {
 
     async fn build_system_instruction(&self, q_num: i32, is_targeted_scan: bool) -> String {
         let scan_note = if is_targeted_scan {
-            format!("\nLƯU Ý ĐẶC BIỆT: Trong toàn bộ tài liệu bài làm học sinh (gồm nhiều trang/PDF), hãy TÌM VÀ CHỈ CHẤM DUY NHẤT Bài {}. Bỏ qua tất cả các bài khác. Nếu học sinh không làm Bài {}, trả về 0 điểm và ghi rõ 'Không tìm thấy bài làm cho câu này'.", q_num, q_num)
+            format!("\nLƯU Ý QUAN TRỌNG: Hãy rà soát kỹ các trang ảnh để tìm đúng phần lời giải của Bài {} (học sinh có thể viết 'Bài {}', 'Câu {}', 'Câu I/II...', hoặc viết trực tiếp các phép tính của bài này). Đối chiếu từng ý với Barem để cho điểm chuẩn xác nhất.", q_num, q_num, q_num)
         } else {
             String::new()
         };
@@ -77,7 +77,7 @@ impl GradingService {
             for v in arr {
                 if let Some(s) = v.as_str() {
                     if let Ok(bytes) = tokio::fs::read(format!(".{}", s)).await {
-                        parts.push(json!({"text": format!("Ảnh Đề bài (có thể chứa thang điểm) {}:", question.question_number)}));
+                        parts.push(json!({"text": format!("Ảnh Đề bài {}:", question.question_number)}));
                         parts.push(json!({"inlineData": {"mimeType": "image/jpeg", "data": STANDARD.encode(&bytes)}}));
                     }
                 }
@@ -90,7 +90,7 @@ impl GradingService {
         if sol_urls.is_empty() && !question.reference_image_url.is_empty() {
             sol_urls.push(question.reference_image_url.clone());
         }
-        parts.push(json!({"text": format!("Ảnh Đáp án mẫu & Thang điểm Bài {} (Lưu ý: {}):", question.question_number, question.native_prompt.as_deref().unwrap_or("Chuẩn"))}));
+        parts.push(json!({"text": format!("Ảnh Đáp án mẫu & Thang điểm Bài {}:", question.question_number)}));
         for url in &sol_urls {
             if let Ok(bytes) = tokio::fs::read(format!(".{}", url)).await {
                 parts.push(json!({"inlineData": {"mimeType": "image/jpeg", "data": STANDARD.encode(&bytes)}}));
