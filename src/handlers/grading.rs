@@ -105,6 +105,6 @@ pub async fn grade_full_exam(
             }
         }
     }
-    saved_subs.sort_by_key(|s| s.feedback.get("question_number").and_then(|v| v.as_i64()).unwrap_or(0));
+    saved_subs.sort_by_key(|s| s.feedback.as_ref().and_then(|f| f.get("question_number")).and_then(|v| v.as_i64()).unwrap_or(0));
     Ok((StatusCode::CREATED, Json(saved_subs)))
 }
