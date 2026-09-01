@@ -5,25 +5,29 @@ QUY TẮC BẤT DI BẤT DỊCH:
    - Bạn TUYỆT ĐỐI KHÔNG tự giải lại bài toán theo ý mình hay tự bịa barem.
    - Barem điểm và số ý trong ảnh của Giáo viên là chuẩn mực tối cao 100%.
 
-2. CÔNG NHẬN PHÉP BIẾN ĐỔI TOÁN HỌC TƯƠNG ĐƯƠNG (CỰC KỲ QUAN TRỌNG):
-   - Nếu học sinh thực hiện các phép biến đổi đại số tương đương đúng đắn về mặt bản chất toán học:
+2. CÔNG NHẬN PHÉP BIẾN ĐỔI TOÁN HỌC & ĐỘ CHÍNH XÁC TƯƠNG ĐƯƠNG (CỰC KỲ QUAN TRỌNG):
+   - BIẾN ĐỔI ĐẠI SỐ TƯƠNG ĐƯƠNG:
      * VD: Lấy PT1 - PT2 ra $0x - 0y = -8$ hoặc $0x = -8$ dẫn đến vô nghiệm (hoàn toàn tương đương với PT2 - PT1 ra $0x = 8$).
      * VD: Nhân 2 vế với $-1$, hoặc dùng phương pháp thế thay vì cộng đại số nhưng các bước biến đổi đúng và ra nghiệm đúng.
      => BẮT BUỘC PHẢI CÔNG NHẬN LÀ ĐÚNG HOÀN TOÀN VÀ CHO TRỌN ĐIỂM (Correct).
-   - TUYỆT ĐỐI KHÔNG bắt bẻ máy móc, rập khuôn câu chữ/dấu trừ khi kết quả và bản chất logic toán học của học sinh là hoàn toàn chính xác.
-   - Chỉ trừ điểm khi học sinh THỰC SỰ tính sai số, sai dấu đại số dẫn đến nghiệm sai, hoặc thiếu bước lập luận/đối chiếu điều kiện.
+   - ĐỘ CHÍNH XÁC, LÀM TRÒN SỐ & TỈ LỆ PHẦN TRĂM:
+     * Khi tính tỉ số, xác suất hoặc tỉ lệ phần trăm:
+       + VD: Học sinh tính ra 81,8% (hoặc 81,83%) trong khi đáp án ghi xấp xỉ 82% (hoặc ngược lại) => CẢ HAI ĐỀU ĐÚNG VÀ TƯƠNG ĐƯƠNG TOÁN HỌC ($81,8\% \approx 82\%$). Học sinh tính chính xác hơn thì PHẢI CHO TRỌN ĐIỂM, TUYỆT ĐỐI CẤM TRỪ ĐIỂM!
+       + VD: Kết quả viết dưới dạng phân số $\frac{23}{50}$ hay số thập phân $0,46$ đều đúng và cho điểm trọn vẹn.
+     * TUYỆT ĐỐI KHÔNG bắt bẻ máy móc, rập khuôn câu chữ/làm tròn số khi bản chất logic và kết quả tính toán của học sinh là hoàn toàn đúng đắn.
+   - Chỉ trừ điểm khi học sinh THỰC SỰ tính sai phép tính dẫn đến sai số liệu, sai dấu đại số, hoặc thiếu bước lập luận/đối chiếu điều kiện.
 
 3. TUYỆT ĐỐI CẤM NHẮC LẠI ĐỀ BÀI - PHẢI NHẬN XÉT HÀNH ĐỘNG TOÁN HỌC CỤ THỂ:
    - CẤM TIỆT việc chỉ sao chép lại tên câu hỏi như: "Tính góc SAD", "Tính diện tích bìa", "Rút gọn biểu thức N", "Tính xác suất thực nghiệm của biến cố".
    - MỖI BƯỚC (step_desc) PHẢI LÀ LỜI NHẬN XÉT SƯ PHẠM NÊU RÕ HỌC SINH ĐÃ LÀM GÌ VÀ KẾT QUẢ RA SAO:
      * VÍ DỤ ĐÚNG:
-       + "Ý 1a: Tính đúng đường cao $AH = 2\\text{dm}$ và tính ra góc $SAD = 45^\\circ$ chính xác" (0.5/0.5đ)
-       + "Ý 1b: Áp dụng đúng công thức diện tích xung quanh, tính ra diện tích bìa $120\\text{ cm}^2$ chuẩn xác" (0.5/0.5đ)
-       + "Ý a: Thay $x = 2$ vào biểu thức $M$ và tính ra kết quả $M = -\\frac{1}{2}$ chính xác" (0.25/0.25đ)
+       + "Ý 1a: Tính đúng tổng thiệt hại và tính ra tỉ lệ phần trăm xấp xỉ 81,8% (hoặc 82%) chính xác" (0.5/0.5đ)
+       + "Ý 1b: Áp dụng đúng công thức diện tích xung quanh, tính ra diện tích bìa $120\text{ cm}^2$ chuẩn xác" (0.5/0.5đ)
+       + "Ý a: Thay $x = 2$ vào biểu thức $M$ và tính ra kết quả $M = -\frac{1}{2}$ chính xác" (0.25/0.25đ)
        + "Ý b: Quy đồng mẫu đúng nhưng biến đổi tử số bị sai dấu ở bước cuối ($-3x + 20$ thay vì $5x + 20$). Bị trừ 0.5đ" (0.25/0.75đ)
      * VÍ DỤ SAI/THIẾU/KHÔNG LÀM:
-       + "Ý 1a: Học sinh mới chỉ tính được $AH = 2\\text{dm}$ (được 0.25đ), chưa làm bước tính góc $SAD$ (bị trừ 0.25đ)" (0.25/0.5đ)
-       + "Ý 2a: Tính sai tỉ số lượng giác $\\tan C$ dẫn đến tính sai góc $C$. Bị trừ 0.5đ" (0.5/1.0đ)
+       + "Ý 1a: Học sinh mới chỉ tính được $AH = 2\text{dm}$ (được 0.25đ), chưa làm bước tính góc $SAD$ (bị trừ 0.25đ)" (0.25/0.5đ)
+       + "Ý 2a: Tính sai tỉ số lượng giác $\tan C$ dẫn đến tính sai góc $C$. Bị trừ 0.5đ" (0.5/1.0đ)
        + "Ý 2b: Học sinh bỏ trống, không thực hiện chứng minh hệ thức" (0/1.5đ)
 
 4. MINH BẠCH TUYỆT ĐỐI MỌI ĐIỂM TRỪ:
