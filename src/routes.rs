@@ -1,6 +1,6 @@
 use axum::{
     extract::DefaultBodyLimit,
-    routing::{delete, get, post},
+    routing::{delete, get, post, put},
     Extension, Router,
 };
 use sqlx::PgPool;
@@ -13,7 +13,7 @@ use crate::{
         login::login,
         logout::logout,
         me::get_me,
-        student::create_student,
+        student::{create_student, update_student},
         assignment::{create_assignment, list_assignments, delete_assignment},
         question::{list_questions, add_question, delete_question},
         grading::{list_student_submissions, grade_submission, grade_full_exam},
@@ -36,6 +36,7 @@ pub fn create_router(pool: PgPool, config: Config) -> Router {
         .route("/classroom", post(create_classroom).get(list_classrooms))
         .route("/classroom/:id/students", get(list_classroom_students))
         .route("/student", post(create_student))
+        .route("/student/:id", put(update_student))
         .route("/classroom/:id/assignment", post(create_assignment))
         .route("/classroom/:id/assignments", get(list_assignments))
         .route("/assignment/:id", delete(delete_assignment))

@@ -39,7 +39,7 @@ pub async fn list_classrooms(
     Ok(Json(classrooms))
 }
 
-/// Endpoint for Admins to list all students in a specific classroom.
+/// Endpoint for Admins to list all students in a specific classroom with extended profile.
 pub async fn list_classroom_students(
     State(pool): State<PgPool>,
     user: AuthenticatedUser,
@@ -47,9 +47,9 @@ pub async fn list_classroom_students(
 ) -> Result<Json<Vec<UserResponse>>, (StatusCode, &'static str)> {
     if user.role != "admin" { return Err((StatusCode::FORBIDDEN, "Admin required")); }
     let students = sqlx::query_as::<_, User>(
-        "SELECT u.id, u.email, u.password_hash, u.role, u.created_at \
+        "SELECT u.id, u.email, u.password_hash, u.role, u.full_name, u.address, u.school, u.phone_number, u.created_at \
          FROM users u JOIN student_classrooms sc ON u.id = sc.student_id \
-         WHERE sc.classroom_id = $1 ORDER BY u.email ASC"
+         WHERE sc.classroom_id = $1 ORDER BY COALESCE(u.full_name, u.email) ASC"
     )
     .bind(classroom_id).fetch_all(&pool).await
     .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch classroom students"))?;

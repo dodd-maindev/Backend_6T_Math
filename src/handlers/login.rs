@@ -20,12 +20,17 @@ pub async fn login(
     jar: CookieJar,
     Json(payload): Json<LoginRequest>,
 ) -> Result<(CookieJar, Json<UserResponse>), (StatusCode, &'static str)> {
-    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
-        .bind(&payload.email)
-        .fetch_optional(&pool)
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error"))?
-        .ok_or((StatusCode::UNAUTHORIZED, "Invalid email or password"))?;
+    let user = sqlx::query_as::<_, User>(
+        "SELECT id, email, password_hash, role, created_at FROM users WHERE email = $1"
+    )
+    .bind(payload.email.trim())
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| {
+        eprintln!("[Login Error] Database query failure: {:?}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, "Database error")
+    })?
+    .ok_or((StatusCode::UNAUTHORIZED, "Invalid email or password"))?;
 
     if !verify_password(&payload.password, &user.password_hash) {
         return Err((StatusCode::UNAUTHORIZED, "Invalid email or password"));

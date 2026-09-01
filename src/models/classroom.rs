@@ -24,10 +24,14 @@ pub struct CreateClassroomRequest {
     pub name: String,
 }
 
-/// DTO for adding a new student to a classroom.
+/// DTO for adding a new student to a classroom with profile.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateStudentRequest {
     pub email: String,
     pub password: String,
     pub classroom_id: Uuid,
+    pub full_name: Option<String>,
+    pub address: Option<String>,
+    pub school: Option<String>,
+    pub phone_number: Option<String>,
 }
