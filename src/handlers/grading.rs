@@ -10,7 +10,7 @@ use crate::{
     models::assignment::AssignmentQuestion,
     models::grading::{StudentSubmission, StudentSubmissionWithDetails},
     services::grading_service::GradingService,
-    utils::submission_parser::parse_submission_form,
+    utils::{submission_limiter::SubmissionLimiter, submission_parser::parse_submission_form, turnstile::verify_turnstile_token},
 };
 
 /// Lists all grading submissions for a given student ID.
@@ -28,7 +28,7 @@ pub async fn list_student_submissions(
     Ok(Json(submissions))
 }
 
-/// Evaluates a single question submission with uploaded student work images.
+/// Evaluates a single question with Cloudflare Turnstile bot verification and attempt limiter.
 pub async fn grade_submission(
     State(pool): State<PgPool>,
     user: AuthenticatedUser,
@@ -40,12 +40,17 @@ pub async fn grade_submission(
     if user.role != "admin" && user.id != s_id { return Err((StatusCode::FORBIDDEN, "Forbidden".into())); }
     if form.student_files.is_empty() { return Err((StatusCode::BAD_REQUEST, "Missing files".into())); }
 
+    let cf_secret = std::env::var("CLOUDFLARE_TURNSTILE_SECRET_KEY").unwrap_or_default();
+    verify_turnstile_token(&cf_secret, form.turnstile_token.as_deref().unwrap_or(""), None).await.map_err(|e| (StatusCode::FORBIDDEN, e))?;
+
     let questions = sqlx::query_as::<_, AssignmentQuestion>(
         "SELECT id, assignment_id, question_number, reference_image_url, question_image_urls, solution_image_urls, native_prompt, max_score, created_at \
          FROM assignment_questions WHERE assignment_id = $1 ORDER BY question_number ASC"
     ).bind(a_id).fetch_all(&pool).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let question = form.question_number.and_then(|qn| questions.iter().find(|q| q.question_number == qn)).or_else(|| questions.first()).ok_or((StatusCode::BAD_REQUEST, "No questions found".into()))?;
+    SubmissionLimiter::check_single_question(&pool, &user.role, s_id, a_id, question.question_number).await?;
+
     let grader = GradingService::new().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
     let mut feedback = grader.grade_question(question, &form.student_files, false).await.map_err(|e| (StatusCode::BAD_GATEWAY, e))?;
     feedback["student_image_urls"] = json!(form.file_urls);
@@ -57,7 +62,7 @@ pub async fn grade_submission(
     Ok((StatusCode::CREATED, Json(sub)))
 }
 
-/// Evaluates a full multi-page PDF or image set by concurrently grading all exam questions with JoinSet.
+/// Evaluates full exam with Cloudflare Turnstile bot verification and total attempt limiter.
 pub async fn grade_full_exam(
     State(pool): State<PgPool>,
     user: AuthenticatedUser,
@@ -69,11 +74,15 @@ pub async fn grade_full_exam(
     if user.role != "admin" && user.id != s_id { return Err((StatusCode::FORBIDDEN, "Forbidden".into())); }
     if form.student_files.is_empty() { return Err((StatusCode::BAD_REQUEST, "Missing files".into())); }
 
+    let cf_secret = std::env::var("CLOUDFLARE_TURNSTILE_SECRET_KEY").unwrap_or_default();
+    verify_turnstile_token(&cf_secret, form.turnstile_token.as_deref().unwrap_or(""), None).await.map_err(|e| (StatusCode::FORBIDDEN, e))?;
+
     let questions = sqlx::query_as::<_, AssignmentQuestion>(
         "SELECT id, assignment_id, question_number, reference_image_url, question_image_urls, solution_image_urls, native_prompt, max_score, created_at \
          FROM assignment_questions WHERE assignment_id = $1 ORDER BY question_number ASC"
     ).bind(a_id).fetch_all(&pool).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    if questions.is_empty() { return Err((StatusCode::BAD_REQUEST, "No questions found".into())); }
+    if questions.is_empty() { return Err((StatusCode::BAD_REQUEST, "No questions found".into()))?; }
+    SubmissionLimiter::check_full_exam(&pool, &user.role, s_id, a_id, questions.len() as i64).await?;
 
     let grader = Arc::new(GradingService::new().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?);
     let files_arc = Arc::new(form.student_files);
