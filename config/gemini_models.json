@@ -1,0 +1,182 @@
+[
+  {
+    "id": "gemini-3.1-flash-lite",
+    "name": "Gemini 3.1 Flash Lite",
+    "priority": 1,
+    "rpm": 15,
+    "rpd": 500,
+    "tier": "High Capacity Flash-Lite",
+    "description": "Primary high-capacity fast inference model"
+  },
+  {
+    "id": "gemini-3.5-flash-lite",
+    "name": "Gemini 3.5 Flash Lite",
+    "priority": 2,
+    "rpm": 15,
+    "rpd": 500,
+    "tier": "High Capacity Flash-Lite",
+    "description": "Secondary high-capacity model with advanced reasoning"
+  },
+  {
+    "id": "gemini-2.5-flash-lite",
+    "name": "Gemini 2.5 Flash Lite",
+    "priority": 3,
+    "rpm": 10,
+    "rpd": 20,
+    "tier": "High Capacity Flash-Lite",
+    "description": "Stable fast lite fallback"
+  },
+  {
+    "id": "gemini-2.0-flash-lite",
+    "name": "Gemini 2.0 Flash Lite",
+    "priority": 4,
+    "rpm": 15,
+    "rpd": 500,
+    "tier": "High Capacity Flash-Lite",
+    "description": "Reliable high-throughput fallback"
+  },
+  {
+    "id": "gemini-1.5-flash-8b",
+    "name": "Gemini 1.5 Flash 8B",
+    "priority": 5,
+    "rpm": 15,
+    "rpd": 1500,
+    "tier": "High Capacity Flash-Lite",
+    "description": "Ultra high-speed lightweight fallback"
+  },
+  {
+    "id": "gemini-3.7-flash",
+    "name": "Gemini 3.7 Flash",
+    "priority": 6,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Next-Gen Flash",
+    "description": "Latest flagship multimodal reasoning model"
+  },
+  {
+    "id": "gemini-3.6-flash",
+    "name": "Gemini 3.6 Flash",
+    "priority": 7,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Next-Gen Flash",
+    "description": "Advanced multimodal reasoning"
+  },
+  {
+    "id": "gemini-3.5-flash",
+    "name": "Gemini 3.5 Flash",
+    "priority": 8,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Next-Gen Flash",
+    "description": "Standard multimodal flash flagship"
+  },
+  {
+    "id": "gemini-3-flash",
+    "name": "Gemini 3 Flash",
+    "priority": 9,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Next-Gen Flash",
+    "description": "Multimodal baseline model"
+  },
+  {
+    "id": "gemini-2.5-flash",
+    "name": "Gemini 2.5 Flash",
+    "priority": 10,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Standard Flash",
+    "description": "Stable previous generation flash"
+  },
+  {
+    "id": "gemini-2.0-flash",
+    "name": "Gemini 2.0 Flash",
+    "priority": 11,
+    "rpm": 15,
+    "rpd": 1500,
+    "tier": "Standard Flash",
+    "description": "High throughput standard flash model"
+  },
+  {
+    "id": "gemini-1.5-flash",
+    "name": "Gemini 1.5 Flash",
+    "priority": 12,
+    "rpm": 15,
+    "rpd": 1500,
+    "tier": "Standard Flash",
+    "description": "Battle-tested stable fallback"
+  },
+  {
+    "id": "gemini-3.1-pro",
+    "name": "Gemini 3.1 Pro",
+    "priority": 13,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Deep Reasoning Pro",
+    "description": "Deep mathematical deduction model"
+  },
+  {
+    "id": "gemini-2.5-pro",
+    "name": "Gemini 2.5 Pro",
+    "priority": 14,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Deep Reasoning Pro",
+    "description": "Complex logic problem solver"
+  },
+  {
+    "id": "gemini-1.5-pro",
+    "name": "Gemini 1.5 Pro",
+    "priority": 15,
+    "rpm": 2,
+    "rpd": 50,
+    "tier": "Deep Reasoning Pro",
+    "description": "Long context professional reasoning"
+  },
+  {
+    "id": "gemini-omni-1.1-flash",
+    "name": "Gemini Omni 1.1 Flash",
+    "priority": 16,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Omni Multimodal",
+    "description": "Omni-modal visual comprehension model"
+  },
+  {
+    "id": "gemini-omni-flash",
+    "name": "Gemini Omni Flash",
+    "priority": 17,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Omni Multimodal",
+    "description": "Multi-stream vision model"
+  },
+  {
+    "id": "gemini-robotics-er-2-preview",
+    "name": "Gemini Robotics ER 2",
+    "priority": 18,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Experimental Vision",
+    "description": "Enhanced spatial reasoning vision model"
+  },
+  {
+    "id": "gemini-robotics-er-1.6-preview",
+    "name": "Gemini Robotics ER 1.6",
+    "priority": 19,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Experimental Vision",
+    "description": "Spatial perception fallback model"
+  },
+  {
+    "id": "deep-research-pro-preview",
+    "name": "Deep Research Pro",
+    "priority": 20,
+    "rpm": 2,
+    "rpd": 10,
+    "tier": "Agent Reasoning",
+    "description": "Exhaustive multi-step research fallback"
+  }
+]

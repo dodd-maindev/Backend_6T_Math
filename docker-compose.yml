@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: math_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: math_clb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: math_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./prompts:/app/prompts
+      - ./config:/app/config
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/math_clb
+      - JWT_SECRET=your_super_secret_jwt_key_should_be_at_least_32_characters_long
+      - ACCESS_TOKEN_EXPIRE_MINUTES=43200
+      - REFRESH_TOKEN_EXPIRE_DAYS=30
+      - PORT=8000
+      - FRONTEND_URL=http://localhost:3000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.1-flash-lite}
+    depends_on:
+      - db

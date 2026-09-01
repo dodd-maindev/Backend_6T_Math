@@ -1,0 +1,10 @@
+ Thông tin kết nối khi chạy xong:
+Database (PostgreSQL):
+Host: localhost
+Port: 5432
+User/Password: postgres / postgres
+Database Name: math_clb
+Backend API: http://localhost:8000
+Tài khoản Admin mặc định (Tự động khởi tạo sau khi DB chạy lên):
+Email: admin@6tmath.vn
+Mật khẩu: adminpassword
