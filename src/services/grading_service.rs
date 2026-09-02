@@ -19,36 +19,40 @@ impl GradingService {
         Ok(Self { client: GeminiClient::from_env()? })
     }
 
-    /// Grades a single question by sending student + teacher assets to Gemini.
+    /// Two-phase grading: (1) Blind OCR Student Work -> (2) Barem Evaluation against Teacher Key.
     pub async fn grade_question(&self, question: &AssignmentQuestion, student_files: &[StudentFilePayload], is_targeted_scan: bool) -> Result<Value, String> {
-        let sys_prompt = self.build_system_instruction(question.question_number, is_targeted_scan).await;
+        let transcript = self.transcribe_student_work(question.question_number, student_files, is_targeted_scan).await?;
+        let sys_prompt = self.build_grading_instruction(question.question_number).await;
         let mut parts: Vec<Value> = Vec::new();
 
-        parts.push(json!({"text": "=== [PHẦN 1: TÀI LIỆU BÀI LÀM HỌC SINH (CHỮ VIẾT TAY CẦN CHẤM)] ==="}));
-        for (idx, file) in student_files.iter().enumerate() {
-            parts.push(json!({"text": format!("Trang bài làm viết tay học sinh ({}/{} - {}):", idx + 1, student_files.len(), file.mime_type)}));
-            parts.push(json!({"inlineData": {"mimeType": file.mime_type, "data": file.base64_data}}));
-        }
-
-        parts.push(json!({"text": format!("=== [PHẦN 2: CHUẨN MỰC CỦA GIÁO VIÊN BÀI SỐ {} (TỔNG ĐIỂM: {} ĐIỂM) - CHỈ DÙNG ĐỐI CHIẾU, KHÔNG PHẢI BÀI HỌC SINH] ===", question.question_number, question.max_score)}));
+        parts.push(json!({"text": format!("=== [BÀI LÀM VIẾT TAY THỰC TẾ CỦA HỌC SINH - BÀI {}] ===\n{}\n=============================================", question.question_number, transcript)}));
+        parts.push(json!({"text": format!("=== [CHUẨN MỰC GIÁO VIÊN BÀI SỐ {} (TỔNG: {} ĐIỂM)] ===", question.question_number, question.max_score)}));
         self.append_question_assets(&mut parts, question).await;
 
         let mut feedback = self.client.evaluate_submission(&sys_prompt, parts).await?;
+        feedback["student_work_transcript"] = json!(transcript);
         let q_max = question.max_score.to_string().parse::<f64>().unwrap_or(0.0);
         score_sanitizer::sanitize_scores(&mut feedback, q_max);
         feedback["question_number"] = json!(question.question_number);
         Ok(feedback)
     }
 
-    /// Builds the system instruction from the prompt template file.
-    async fn build_system_instruction(&self, q_num: i32, is_targeted_scan: bool) -> String {
-        let scan_note = if is_targeted_scan {
-            "\n\nLƯU Ý: Bài làm học sinh là ảnh chụp riêng bài này."
-        } else {
-            "\n\nLƯU Ý: Bài làm học sinh là toàn bộ bài thi, hãy tìm đúng phần chữ viết tay của Bài tương ứng."
-        };
+    /// Phase 1: Blind OCR transcription without seeing teacher solutions to prevent hallucination.
+    async fn transcribe_student_work(&self, q_num: i32, student_files: &[StudentFilePayload], is_targeted: bool) -> Result<String, String> {
+        let scan_note = if is_targeted { "Ảnh chụp riêng bài này." } else { "Tìm đúng phần viết tay của Bài này trong toàn bộ các trang bài thi." };
+        let sys = format!("Bạn là chuyên gia đọc bài thi viết tay môn Toán. Nhiệm vụ: Đọc và trích xuất TRUNG THỰC 100% tất cả những gì học sinh ĐÃ VIẾT TAY cho Bài {} ({scan_note}). Ghi rõ từng câu (a, b, c...), các phép biến đổi, công thức, số liệu, nghiệm số thực tế. Nếu câu nào học sinh KHÔNG LÀM hoặc DỪNG LẠI DỞ DANG, hãy ghi rõ 'Học sinh chỉ viết... rồi dừng lại, chưa làm xong'. TUYỆT ĐỐI KHÔNG tự giải hộ hay thêm nghiệm.", q_num);
+        let mut parts: Vec<Value> = Vec::new();
+        for (idx, file) in student_files.iter().enumerate() {
+            parts.push(json!({"text": format!("Trang bài làm học sinh ({}/{}):", idx + 1, student_files.len())}));
+            parts.push(json!({"inlineData": {"mimeType": file.mime_type, "data": file.base64_data}}));
+        }
+        self.client.transcribe_student_work(&sys, parts).await
+    }
+
+    /// Phase 2: Builds the system instruction from template for barem evaluation.
+    async fn build_grading_instruction(&self, q_num: i32) -> String {
         let template = tokio::fs::read_to_string("prompts/grading_system_prompt.txt").await.unwrap_or_default();
-        let prompt = template.replace("{QUESTION_NUMBER}", &q_num.to_string()).replace("{SCAN_NOTE}", scan_note);
+        let prompt = template.replace("{QUESTION_NUMBER}", &q_num.to_string()).replace("{SCAN_NOTE}", "");
         format!("Bạn là Giám khảo CLB 6T MATH. Chấm Bài {}.{}", q_num, prompt)
     }
 
@@ -72,7 +76,7 @@ impl GradingService {
             sol_urls.push(question.reference_image_url.clone());
         }
         let note = question.native_prompt.as_deref().unwrap_or("Chuẩn");
-        parts.push(json!({"text": format!("Ảnh Đáp án & Barem chuẩn Bài {} (Chữ ĐEN: Lời giải mẫu GV; Chữ ĐỎ: Thang điểm & Hướng dẫn chấm):", question.question_number)}));
+        parts.push(json!({"text": format!("Ảnh Đáp án & Barem chuẩn Bài {} (Lưu ý: {}):", question.question_number, note)}));
         for url in &sol_urls {
             if let Ok(bytes) = tokio::fs::read(format!(".{}", url)).await {
                 parts.push(json!({"inlineData": {"mimeType": "image/jpeg", "data": STANDARD.encode(&bytes)}}));

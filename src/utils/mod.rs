@@ -1,5 +1,6 @@
 pub mod api_key_pool;
 pub mod gemini_client;
+pub mod gemini_payload;
 pub mod hash;
 pub mod jwt;
 pub mod model_registry;
