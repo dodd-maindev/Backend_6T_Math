@@ -6,3 +6,5 @@ pub mod student;
 pub mod assignment;
 pub mod question;
 pub mod grading;
+pub mod upload;
+pub mod grade_uploads;

@@ -16,7 +16,7 @@ pub struct Assignment {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 pub struct AssignmentQuestion {
     pub id: Uuid,
     pub assignment_id: Uuid,

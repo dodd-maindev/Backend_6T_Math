@@ -3,3 +3,4 @@ pub mod classroom;
 pub mod user;
 pub mod assignment;
 pub mod grading;
+pub mod upload;
