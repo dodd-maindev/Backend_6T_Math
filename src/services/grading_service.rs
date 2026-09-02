@@ -20,18 +20,18 @@ impl GradingService {
         Ok(Self { client: GeminiClient::from_env()? })
     }
 
-    /// Transcribes full exam once across all pages to guarantee complete extraction of all questions, sub-items, and geometric diagrams.
+    /// Transcribes full exam once across all pages with robust question number extraction.
     pub async fn transcribe_full_exam(&self, student_files: &[StudentFilePayload]) -> Result<HashMap<i32, String>, String> {
-        let sys = "Bạn là chuyên gia OCR bài thi viết tay môn Toán. Nhiệm vụ: Đọc toàn bộ các trang bài thi viết tay từ trang 1 đến trang cuối một cách tỉ mỉ, chi tiết và trung thực 100%.\n\
-        QUY TẮC TRÍCH XUẤT CHO TỪNG BÀI (Bài 1, Bài 2, Bài 3, Bài 4, Bài 5, Bài 6, Bài 7...):\n\
-        1. HÌNH VẼ HÌNH HỌC: Nếu bài có hình vẽ (kể cả vẽ bên lề hay giữa các câu), BẮT BUỘC ghi rõ ngay đầu bài: 'Hình vẽ: Có vẽ hình đầy đủ các điểm (ví dụ A, B, C, H, E, F, M...) và ký hiệu vuông góc'.\n\
-        2. TỪNG CÂU CON (a, b, c...): Trích xuất chi tiết từng bước giải, các biểu thức, phép tính, các sửa đổi/chữa chữ của học sinh. Đọc đúng các ký hiệu toán học theo ngữ cảnh hình học/đại số (ví dụ tam giác đồng dạng BHF và BEC, góc B chung, góc H = góc E = 90 độ, tỉ lệ BE/BC = BH/BF => BF.BE = BC.BH).\n\
-        3. NẾU BỎ TRỐNG HOẶC LÀM DỞ DANG: Ghi rõ 'Học sinh chỉ viết... rồi dừng lại, chưa làm xong' hoặc 'Học sinh không làm ý...'.\n\
-        4. TUYỆT ĐỐI KHÔNG tự giải hộ, chỉ trích xuất đúng thực tế bài làm.";
+        let sys = "Bạn là chuyên gia OCR bài thi viết tay môn Toán. Nhiệm vụ: Đọc toàn bộ các trang bài thi viết tay từ trang 1 đến trang cuối một cách tỉ mỉ, trích xuất TRUNG THỰC 100% tất cả các bài (Bài 1, Bài 2, Bài 3, Bài 4, Bài 5, Bài 6, Bài 7...).\n\
+        QUY TẮC:\n\
+        1. BẮT BUỘC TRÍCH XUẤT ĐỦ TẤT CẢ CÁC BÀI có trên bài thi (Bài 1, Bài 2, Bài 3, Bài 4, Bài 5, Bài 6, Bài 7). Điền đúng số nguyên question_number (1, 2, 3, 4, 5, 6, 7).\n\
+        2. HÌNH VẼ HÌNH HỌC: Nếu có hình vẽ, BẮT BUỘC ghi rõ 'Hình vẽ: Có vẽ hình đầy đủ các điểm và góc vuông'.\n\
+        3. TỪNG CÂU CON (a, b, c...): Trích xuất chi tiết biểu thức, biến đổi, kết quả, sửa chữ của học sinh. Đặt ký hiệu toán học trong $...$.\n\
+        4. BỎ TRỐNG: Nếu học sinh không làm bài nào thì ghi 'Học sinh không làm bài này'.";
 
         let mut parts: Vec<Value> = Vec::new();
         for (idx, file) in student_files.iter().enumerate() {
-            parts.push(json!({"text": format!("Trang bài thi học sinh ({}/{}):", idx + 1, student_files.len())}));
+            parts.push(json!({"text": format!("Trang bài thi ({}/{}):", idx + 1, student_files.len())}));
             parts.push(json!({"inlineData": {"mimeType": file.mime_type, "data": file.base64_data}}));
         }
 
@@ -39,12 +39,23 @@ impl GradingService {
         let mut map = HashMap::new();
         if let Some(arr) = res.get("transcripts").and_then(|t| t.as_array()) {
             for item in arr {
-                let qn = item.get("question_number").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
+                let qn = Self::parse_question_num(item);
                 let work = item.get("student_work").and_then(|v| v.as_str()).unwrap_or("").to_string();
                 if qn > 0 && !work.is_empty() { map.insert(qn, work); }
             }
         }
         Ok(map)
+    }
+
+    /// Robustly extracts integer question number from JSON item.
+    fn parse_question_num(item: &Value) -> i32 {
+        if let Some(n) = item.get("question_number").and_then(|v| v.as_i64()) { return n as i32; }
+        if let Some(n) = item.get("question_number").and_then(|v| v.as_f64()) { return n as i32; }
+        if let Some(s) = item.get("question_number").and_then(|v| v.as_str()) {
+            let digits: String = s.chars().filter(|c| c.is_ascii_digit()).collect();
+            if let Ok(n) = digits.parse::<i32>() { return n; }
+        }
+        0
     }
 
     /// Grades a single question using pre-extracted transcript against teacher barem.
@@ -73,7 +84,7 @@ impl GradingService {
             parts.push(json!({"text": format!("Trang ({}/{}):", idx + 1, student_files.len())}));
             parts.push(json!({"inlineData": {"mimeType": file.mime_type, "data": file.base64_data}}));
         }
-        let transcript = self.client.transcribe_student_work(&sys, parts).await.unwrap_or_else(|_| "Không thể trích xuất".to_string());
+        let transcript = self.client.transcribe_student_work(&sys, parts).await.unwrap_or_else(|_| "Học sinh không làm bài này.".to_string());
         self.grade_question_with_transcript(question, &transcript).await
     }
 

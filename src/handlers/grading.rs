@@ -86,13 +86,22 @@ pub async fn grade_full_exam(
 
     let grader = Arc::new(GradingService::new().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?);
     let transcripts = Arc::new(grader.transcribe_full_exam(&form.student_files).await.unwrap_or_default());
+    let files_arc = Arc::new(form.student_files);
     let mut set = JoinSet::new();
 
     for q in questions {
-        let (g, t) = (Arc::clone(&grader), Arc::clone(&transcripts));
+        let (g, t, f) = (Arc::clone(&grader), Arc::clone(&transcripts), Arc::clone(&files_arc));
         set.spawn(async move {
-            let tr = t.get(&q.question_number).map(|s| s.as_str()).unwrap_or("Học sinh không làm bài này.");
-            (q.question_number, g.grade_question_with_transcript(&q, tr).await)
+            let res = if let Some(tr) = t.get(&q.question_number) {
+                if !tr.trim().is_empty() && !tr.contains("không làm bài này") {
+                    g.grade_question_with_transcript(&q, tr).await
+                } else {
+                    g.grade_question(&q, &f, false).await
+                }
+            } else {
+                g.grade_question(&q, &f, false).await
+            };
+            (q.question_number, res)
         });
     }
 
