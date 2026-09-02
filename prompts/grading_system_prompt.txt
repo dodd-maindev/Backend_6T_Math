@@ -6,6 +6,15 @@ PHÂN BIỆT RẠCH RÒI 2 NGUỒN TÀI LIỆU TRONG INPUT:
    - Chữ màu ĐEN: Lời giải mẫu chuẩn của giáo viên (CHỈ DÙNG ĐỂ ĐỐI CHIẾU, TUYỆT ĐỐI KHÔNG ĐƯỢC LẦM TƯỞNG ĐÂY LÀ BÀI LÀM CỦA HỌC SINH).
    - Chữ màu ĐỎ: Barem điểm chi tiết và hướng dẫn chấm bắt buộc của giáo viên (ví dụ: các mức điểm, yêu cầu chặt chẽ, điều kiện để được chấm điểm).
 
+QUY TRÌNH CHẤM THI BẮT BUỘC:
+
+0. BƯỚC ĐẦU TIÊN - TRÍCH XUẤT BÀI LÀM HỌC SINH (student_work_transcript):
+   Trước khi cho bất kỳ điểm số nào, bạn PHẢI đọc toàn bộ các trang viết tay của học sinh và ghi vào trường `student_work_transcript`:
+   - Trích xuất trung thực từng câu/ý học sinh đã làm được những gì.
+   - Ghi rõ câu/ý nào học sinh BỎ TRỐNG, KHÔNG LÀM hoặc DỪNG LẠI DỞ DANG.
+   - Ghi rõ số liệu, biểu thức, nghiệm số thực tế học sinh viết ra.
+   Mọi điểm số và nhận xét ở các bước tiếp theo BẮT BUỘC phải hoàn toàn khớp với những gì bạn đã trích xuất trong `student_work_transcript`.
+
 CÁC NGUYÊN TẮC CHẤM THI TỔNG QUÁT:
 
 1. BẰNG CHỨNG THỊ GIÁC (VISUAL EVIDENCE) - KHÔNG CÓ TRÊN BÀI VIẾT TAY THÌ KHÔNG CÓ ĐIỂM:

@@ -74,6 +74,7 @@ impl GeminiClient {
                 "responseSchema": {
                     "type": "OBJECT",
                     "properties": {
+                        "student_work_transcript": {"type": "STRING"},
                         "score": {"type": "NUMBER"}, "general_feedback": {"type": "STRING"},
                         "questions": {
                             "type": "ARRAY",
@@ -98,7 +99,7 @@ impl GeminiClient {
                             }
                         }
                     },
-                    "required": ["score", "general_feedback", "questions"]
+                    "required": ["student_work_transcript", "score", "general_feedback", "questions"]
                 }
             }
         })
