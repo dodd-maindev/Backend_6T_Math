@@ -26,7 +26,7 @@ pub async fn parse_submission_form(mut multipart: Multipart) -> Result<ParsedSub
         } else if name == "assignment_id" {
             assignment_id = Uuid::parse_str(&field.text().await.unwrap_or_default()).ok();
         } else if name == "question_number" {
-            question_number = field.text().await.unwrap_or_default().parse::<i32>().ok();
+            question_number = field.text().await.unwrap_or_default().trim().parse::<i32>().ok();
         } else if name == "cf_turnstile_response" || name == "turnstile_token" {
             turnstile_token = Some(field.text().await.unwrap_or_default());
         } else if name == "image" || name == "file" || name == "images" || name == "pdf" || name == "files" {
