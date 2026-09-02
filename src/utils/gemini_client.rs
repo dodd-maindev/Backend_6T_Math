@@ -1,6 +1,6 @@
 use reqwest::{Client, StatusCode};
 use serde_json::Value;
-use crate::utils::{api_key_pool::ApiKeyPool, gemini_payload::{build_grading_payload, build_transcription_payload}, model_registry::ModelRegistry};
+use crate::utils::{api_key_pool::ApiKeyPool, gemini_payload::{build_full_exam_transcription_payload, build_grading_payload, build_transcription_payload}, model_registry::ModelRegistry};
 
 /// Client for communicating with Google Gemini API with smart multi-key load balancing and 20-model fallback.
 #[derive(Clone, Debug)]
@@ -20,14 +20,25 @@ impl GeminiClient {
     pub async fn evaluate_submission(&self, sys: &str, parts: Vec<Value>) -> Result<Value, String> {
         let payload = build_grading_payload(sys, parts);
         let raw_text = self.execute_request(&payload).await?;
-        let clean_json = raw_text.trim().trim_start_matches("```json").trim_start_matches("```").trim_end_matches("```").trim();
-        serde_json::from_str::<Value>(clean_json).map_err(|e| format!("Invalid JSON response: {}. Raw: {}", e, clean_json))
+        Self::parse_clean_json(&raw_text)
     }
 
-    /// Transcribes student handwriting to pure text (Phase 1 Blind OCR).
+    /// Transcribes entire student exam across all pages into structured JSON list of questions.
+    pub async fn transcribe_full_exam(&self, sys: &str, parts: Vec<Value>) -> Result<Value, String> {
+        let payload = build_full_exam_transcription_payload(sys, parts);
+        let raw_text = self.execute_request(&payload).await?;
+        Self::parse_clean_json(&raw_text)
+    }
+
+    /// Transcribes single student question handwriting to text (Blind OCR).
     pub async fn transcribe_student_work(&self, sys: &str, parts: Vec<Value>) -> Result<String, String> {
         let payload = build_transcription_payload(sys, parts);
         self.execute_request(&payload).await
+    }
+
+    fn parse_clean_json(raw: &str) -> Result<Value, String> {
+        let clean = raw.trim().trim_start_matches("```json").trim_start_matches("```").trim_end_matches("```").trim();
+        serde_json::from_str::<Value>(clean).map_err(|e| format!("Invalid JSON response: {}. Raw: {}", e, clean))
     }
 
     /// Executes Gemini API request with multi-model fallback and key rotation.

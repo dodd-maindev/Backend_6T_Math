@@ -85,12 +85,15 @@ pub async fn grade_full_exam(
     SubmissionLimiter::check_full_exam(&pool, &user.role, s_id, a_id, questions.len() as i64).await?;
 
     let grader = Arc::new(GradingService::new().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?);
-    let files_arc = Arc::new(form.student_files);
+    let transcripts = Arc::new(grader.transcribe_full_exam(&form.student_files).await.unwrap_or_default());
     let mut set = JoinSet::new();
 
     for q in questions {
-        let (g, f) = (Arc::clone(&grader), Arc::clone(&files_arc));
-        set.spawn(async move { (q.question_number, g.grade_question(&q, &f, false).await) });
+        let (g, t) = (Arc::clone(&grader), Arc::clone(&transcripts));
+        set.spawn(async move {
+            let tr = t.get(&q.question_number).map(|s| s.as_str()).unwrap_or("Học sinh không làm bài này.");
+            (q.question_number, g.grade_question_with_transcript(&q, tr).await)
+        });
     }
 
     let mut saved_subs = Vec::new();

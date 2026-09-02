@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde_json::{json, Value};
 use crate::models::assignment::AssignmentQuestion;
@@ -19,9 +20,29 @@ impl GradingService {
         Ok(Self { client: GeminiClient::from_env()? })
     }
 
-    /// Two-phase grading: (1) Blind OCR Student Work -> (2) Barem Evaluation against Teacher Key.
-    pub async fn grade_question(&self, question: &AssignmentQuestion, student_files: &[StudentFilePayload], is_targeted_scan: bool) -> Result<Value, String> {
-        let transcript = self.transcribe_student_work(question.question_number, student_files, is_targeted_scan).await?;
+    /// Transcribes the full exam once across all pages to guarantee no missed questions (e.g., 4b, 4c, geometry drawings).
+    pub async fn transcribe_full_exam(&self, student_files: &[StudentFilePayload]) -> Result<HashMap<i32, String>, String> {
+        let sys = "Bạn là chuyên gia OCR bài thi viết tay môn Toán. Nhiệm vụ: Đọc toàn bộ các trang bài thi viết tay từ trang 1 đến trang cuối. Với mỗi Bài (Bài 1, Bài 2, Bài 3, Bài 4, Bài 5, Bài 6, Bài 7...), trích xuất TRUNG THỰC 100% tất cả những gì học sinh đã làm (bao gồm tất cả các ý a, b, c..., hình vẽ, các phép biến đổi, công thức, số liệu, nghiệm số thực tế). Nếu học sinh không làm ý nào, ghi rõ 'Học sinh không làm ý...'. TUYỆT ĐỐI KHÔNG tự giải hộ.";
+        let mut parts: Vec<Value> = Vec::new();
+        for (idx, file) in student_files.iter().enumerate() {
+            parts.push(json!({"text": format!("Trang bài thi học sinh ({}/{}):", idx + 1, student_files.len())}));
+            parts.push(json!({"inlineData": {"mimeType": file.mime_type, "data": file.base64_data}}));
+        }
+
+        let res = self.client.transcribe_full_exam(sys, parts).await?;
+        let mut map = HashMap::new();
+        if let Some(arr) = res.get("transcripts").and_then(|t| t.as_array()) {
+            for item in arr {
+                let qn = item.get("question_number").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
+                let work = item.get("student_work").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                if qn > 0 && !work.is_empty() { map.insert(qn, work); }
+            }
+        }
+        Ok(map)
+    }
+
+    /// Grades a single question using pre-extracted transcript against teacher barem.
+    pub async fn grade_question_with_transcript(&self, question: &AssignmentQuestion, transcript: &str) -> Result<Value, String> {
         let sys_prompt = self.build_grading_instruction(question.question_number).await;
         let mut parts: Vec<Value> = Vec::new();
 
@@ -37,19 +58,20 @@ impl GradingService {
         Ok(feedback)
     }
 
-    /// Phase 1: Blind OCR transcription without seeing teacher solutions to prevent hallucination.
-    async fn transcribe_student_work(&self, q_num: i32, student_files: &[StudentFilePayload], is_targeted: bool) -> Result<String, String> {
-        let scan_note = if is_targeted { "Ảnh chụp riêng bài này." } else { "Tìm đúng phần viết tay của Bài này trong toàn bộ các trang bài thi." };
-        let sys = format!("Bạn là chuyên gia đọc bài thi viết tay môn Toán. Nhiệm vụ: Đọc và trích xuất TRUNG THỰC 100% tất cả những gì học sinh ĐÃ VIẾT TAY cho Bài {} ({scan_note}). Ghi rõ từng câu (a, b, c...), các phép biến đổi, công thức, số liệu, nghiệm số thực tế. Nếu câu nào học sinh KHÔNG LÀM hoặc DỪNG LẠI DỞ DANG, hãy ghi rõ 'Học sinh chỉ viết... rồi dừng lại, chưa làm xong'. TUYỆT ĐỐI KHÔNG tự giải hộ hay thêm nghiệm.", q_num);
+    /// Grades a single question on-demand (fallback or single submission).
+    pub async fn grade_question(&self, question: &AssignmentQuestion, student_files: &[StudentFilePayload], is_targeted_scan: bool) -> Result<Value, String> {
+        let scan_note = if is_targeted_scan { "Ảnh chụp riêng bài này." } else { "Tìm đúng phần viết tay của Bài này." };
+        let sys = format!("Bạn là chuyên gia OCR bài thi viết tay môn Toán. Đọc và trích xuất TRUNG THỰC 100% tất cả những gì học sinh ĐÃ VIẾT TAY cho Bài {} ({scan_note}). Ghi rõ từng câu (a, b, c...), các phép biến đổi, công thức, số liệu, nghiệm số thực tế. Nếu câu nào học sinh KHÔNG LÀM hoặc DỪNG LẠI DỞ DANG, hãy ghi rõ 'Học sinh chỉ viết... rồi dừng lại, chưa làm xong'.", question.question_number);
         let mut parts: Vec<Value> = Vec::new();
         for (idx, file) in student_files.iter().enumerate() {
-            parts.push(json!({"text": format!("Trang bài làm học sinh ({}/{}):", idx + 1, student_files.len())}));
+            parts.push(json!({"text": format!("Trang ({}/{}):", idx + 1, student_files.len())}));
             parts.push(json!({"inlineData": {"mimeType": file.mime_type, "data": file.base64_data}}));
         }
-        self.client.transcribe_student_work(&sys, parts).await
+        let transcript = self.client.transcribe_student_work(&sys, parts).await.unwrap_or_else(|_| "Không thể trích xuất".to_string());
+        self.grade_question_with_transcript(question, &transcript).await
     }
 
-    /// Phase 2: Builds the system instruction from template for barem evaluation.
+    /// Builds the system instruction from template for barem evaluation.
     async fn build_grading_instruction(&self, q_num: i32) -> String {
         let template = tokio::fs::read_to_string("prompts/grading_system_prompt.txt").await.unwrap_or_default();
         let prompt = template.replace("{QUESTION_NUMBER}", &q_num.to_string()).replace("{SCAN_NOTE}", "");

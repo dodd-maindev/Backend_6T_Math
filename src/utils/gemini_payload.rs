@@ -42,7 +42,36 @@ pub fn build_grading_payload(sys: &str, parts: Vec<Value>) -> Value {
     })
 }
 
-/// Builds payload for raw text transcription (Phase 1 Blind OCR).
+/// Builds payload for structured full exam transcription (Phase 1 Full Exam OCR).
+pub fn build_full_exam_transcription_payload(sys: &str, parts: Vec<Value>) -> Value {
+    json!({
+        "systemInstruction": {"parts": [{"text": sys}]},
+        "contents": [{"parts": parts}],
+        "generationConfig": {
+            "temperature": 0.0, "topP": 0.1, "seed": 42,
+            "responseMimeType": "application/json",
+            "responseSchema": {
+                "type": "OBJECT",
+                "properties": {
+                    "transcripts": {
+                        "type": "ARRAY",
+                        "items": {
+                            "type": "OBJECT",
+                            "properties": {
+                                "question_number": {"type": "INTEGER"},
+                                "student_work": {"type": "STRING"}
+                            },
+                            "required": ["question_number", "student_work"]
+                        }
+                    }
+                },
+                "required": ["transcripts"]
+            }
+        }
+    })
+}
+
+/// Builds payload for raw text transcription (Single question OCR).
 pub fn build_transcription_payload(sys: &str, parts: Vec<Value>) -> Value {
     json!({
         "systemInstruction": {"parts": [{"text": sys}]},
