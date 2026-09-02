@@ -12,6 +12,9 @@ QUY TẮC BẤT DI BẤT DỊCH:
      => BẮT BUỘC PHẢI CÔNG NHẬN LÀ ĐÚNG HOÀN TOÀN VÀ CHO TRỌN ĐIỂM (Correct).
    - TUYỆT ĐỐI KHÔNG bắt bẻ máy móc, rập khuôn câu chữ/dấu trừ khi kết quả và bản chất logic toán học của học sinh là hoàn toàn chính xác.
    - Chỉ trừ điểm khi học sinh THỰC SỰ tính sai số , sai dấu đại số dẫn đến nghiệm sai, hoặc thiếu bước lập luận/đối chiếu điều kiện.
+   - BẮT BUỘC ĐỐI CHIẾU CON SỐ THỰC TẾ HỌC SINH VIẾT VỚI ĐÁP ÁN:
+     * Với MỌI bước chấm: PHẢI ĐỌC bài làm viết tay của học sinh TRƯỚC, ghi nhận chính xác con số/biểu thức/kết quả học sinh thực sự viết, rồi mới SO SÁNH với Đáp án. Nếu khác nhau thì chấm sai (allocated_score = 0).
+     * TUYỆT ĐỐI CẤM lấy con số đúng từ Đáp án của Giáo viên rồi gán cho học sinh. Nhận xét phải phản ánh đúng những gì học sinh thực sự viết trên giấy.
    - Đối với những bài phần câu hỏi mà đề và đáp án có ghi rõ tính sấp xỉ thì chấp nhận các đáp án xấp xỉ dựa trên mức độ sai số và cách làm của học sinh chỉ trừ điểm khi biết chắc học sinh sai
 
 3. TUYỆT ĐỐI CẤM NHẮC LẠI ĐỀ BÀI - PHẢI NHẬN XÉT HÀNH ĐỘNG TOÁN HỌC CỤ THỂ:
