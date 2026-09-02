@@ -22,14 +22,14 @@ impl GradingService {
         let sys_prompt = self.build_system_instruction(question.question_number, is_targeted_scan).await;
         let mut parts: Vec<Value> = Vec::new();
 
-        parts.push(json!({"text": format!("=== [CHUẨN MỰC GIÁO VIÊN] BÀI SỐ {} (ĐIỂM TỐI ĐA: {} ĐIỂM) ===", question.question_number, question.max_score)}));
-        self.append_question_assets(&mut parts, question).await;
-
         parts.push(json!({"text": "=== [BÀI LÀM CỦA HỌC SINH CẦN ĐÁNH GIÁ] ==="}));
         for (idx, file) in student_files.iter().enumerate() {
             parts.push(json!({"text": format!("Tài liệu bài làm học sinh ({}/{} - {}):", idx + 1, student_files.len(), file.mime_type)}));
             parts.push(json!({"inlineData": {"mimeType": file.mime_type, "data": file.base64_data}}));
         }
+
+        parts.push(json!({"text": format!("=== [CHUẨN MỰC GIÁO VIÊN] BÀI SỐ {} (ĐIỂM TỐI ĐA: {} ĐIỂM) ===", question.question_number, question.max_score)}));
+        self.append_question_assets(&mut parts, question).await;
 
         let mut feedback = self.client.evaluate_submission(&sys_prompt, parts).await?;
         Self::sanitize_scores(&mut feedback);

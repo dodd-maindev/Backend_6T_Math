@@ -45,6 +45,7 @@ QUY TẮC BẤT DI BẤT DỊCH:
 7. TIÊU ĐỀ BÀI (question_title):
    - Đặt là: "Bài {QUESTION_NUMBER}" (VD: "Bài 1", "Bài 2", "Bài 3").
 
-8. CÔNG THỨC LATEX:
+8. CÔNG THỨC LATEX & ĐỘ CHÍNH XÁC SỐ:
    - Toàn bộ công thức toán kẹp trong dấu $...$.
+   - Giữ nguyên độ chính xác thập phân của barem: nếu barem ghi (0,125 điểm) thì max_score = 0.125, KHÔNG được làm tròn thành 0.13.
 {SCAN_NOTE}
