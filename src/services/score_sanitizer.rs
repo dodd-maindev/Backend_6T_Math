@@ -28,13 +28,24 @@ pub fn sanitize_scores(feedback: &mut Value, q_max_f: f64) {
     feedback["score"] = json!(total_score);
 }
 
-/// Fixes contradictions: if step_desc says "sai"/"nhầm" but status is "Correct".
+/// Enforces strict consistency: Incorrect or error descriptions must have 0.0 score.
 fn fix_status_consistency(steps: &mut [Value]) {
-    let wrong_keywords = ["sai", "nhầm", "thiếu", "chưa", "không đúng", "bị trừ", "mất điểm", "không làm", "bỏ trống"];
+    let wrong_keywords = [
+        "sai", "nhầm", "thiếu", "chưa", "không đúng", "bị trừ",
+        "mất điểm", "không làm", "bỏ trống", "tính sai", "xác định sai", "chưa có"
+    ];
     for s in steps.iter_mut() {
         let status = s.get("status").and_then(|v| v.as_str()).unwrap_or("");
         let desc = s.get("step_desc").and_then(|v| v.as_str()).unwrap_or("").to_lowercase();
-        if status == "Correct" && wrong_keywords.iter().any(|kw| desc.contains(kw)) {
+
+        // 1. If status is Incorrect or Missing, allocated_score must strictly be 0.0
+        if status == "Incorrect" || status == "Missing" {
+            s["allocated_score"] = json!(0.0);
+        }
+
+        // 2. If description indicates an error or missing step, enforce status=Incorrect and score=0.0
+        let has_error = wrong_keywords.iter().any(|kw| desc.contains(kw));
+        if has_error && !desc.contains("không sai") && !desc.contains("chưa sai") {
             s["status"] = json!("Incorrect");
             s["allocated_score"] = json!(0.0);
         }
