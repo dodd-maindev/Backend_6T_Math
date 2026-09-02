@@ -20,9 +20,15 @@ impl GradingService {
         Ok(Self { client: GeminiClient::from_env()? })
     }
 
-    /// Transcribes the full exam once across all pages to guarantee no missed questions (e.g., 4b, 4c, geometry drawings).
+    /// Transcribes full exam once across all pages to guarantee complete extraction of all questions, sub-items, and geometric diagrams.
     pub async fn transcribe_full_exam(&self, student_files: &[StudentFilePayload]) -> Result<HashMap<i32, String>, String> {
-        let sys = "Bạn là chuyên gia OCR bài thi viết tay môn Toán. Nhiệm vụ: Đọc toàn bộ các trang bài thi viết tay từ trang 1 đến trang cuối. Với mỗi Bài (Bài 1, Bài 2, Bài 3, Bài 4, Bài 5, Bài 6, Bài 7...), trích xuất TRUNG THỰC 100% tất cả những gì học sinh đã làm (bao gồm tất cả các ý a, b, c..., hình vẽ, các phép biến đổi, công thức, số liệu, nghiệm số thực tế). Nếu học sinh không làm ý nào, ghi rõ 'Học sinh không làm ý...'. TUYỆT ĐỐI KHÔNG tự giải hộ.";
+        let sys = "Bạn là chuyên gia OCR bài thi viết tay môn Toán. Nhiệm vụ: Đọc toàn bộ các trang bài thi viết tay từ trang 1 đến trang cuối một cách tỉ mỉ, chi tiết và trung thực 100%.\n\
+        QUY TẮC TRÍCH XUẤT CHO TỪNG BÀI (Bài 1, Bài 2, Bài 3, Bài 4, Bài 5, Bài 6, Bài 7...):\n\
+        1. HÌNH VẼ HÌNH HỌC: Nếu bài có hình vẽ (kể cả vẽ bên lề hay giữa các câu), BẮT BUỘC ghi rõ ngay đầu bài: 'Hình vẽ: Có vẽ hình đầy đủ các điểm (ví dụ A, B, C, H, E, F, M...) và ký hiệu vuông góc'.\n\
+        2. TỪNG CÂU CON (a, b, c...): Trích xuất chi tiết từng bước giải, các biểu thức, phép tính, các sửa đổi/chữa chữ của học sinh. Đọc đúng các ký hiệu toán học theo ngữ cảnh hình học/đại số (ví dụ tam giác đồng dạng BHF và BEC, góc B chung, góc H = góc E = 90 độ, tỉ lệ BE/BC = BH/BF => BF.BE = BC.BH).\n\
+        3. NẾU BỎ TRỐNG HOẶC LÀM DỞ DANG: Ghi rõ 'Học sinh chỉ viết... rồi dừng lại, chưa làm xong' hoặc 'Học sinh không làm ý...'.\n\
+        4. TUYỆT ĐỐI KHÔNG tự giải hộ, chỉ trích xuất đúng thực tế bài làm.";
+
         let mut parts: Vec<Value> = Vec::new();
         for (idx, file) in student_files.iter().enumerate() {
             parts.push(json!({"text": format!("Trang bài thi học sinh ({}/{}):", idx + 1, student_files.len())}));
@@ -61,7 +67,7 @@ impl GradingService {
     /// Grades a single question on-demand (fallback or single submission).
     pub async fn grade_question(&self, question: &AssignmentQuestion, student_files: &[StudentFilePayload], is_targeted_scan: bool) -> Result<Value, String> {
         let scan_note = if is_targeted_scan { "Ảnh chụp riêng bài này." } else { "Tìm đúng phần viết tay của Bài này." };
-        let sys = format!("Bạn là chuyên gia OCR bài thi viết tay môn Toán. Đọc và trích xuất TRUNG THỰC 100% tất cả những gì học sinh ĐÃ VIẾT TAY cho Bài {} ({scan_note}). Ghi rõ từng câu (a, b, c...), các phép biến đổi, công thức, số liệu, nghiệm số thực tế. Nếu câu nào học sinh KHÔNG LÀM hoặc DỪNG LẠI DỞ DANG, hãy ghi rõ 'Học sinh chỉ viết... rồi dừng lại, chưa làm xong'.", question.question_number);
+        let sys = format!("Bạn là chuyên gia OCR bài thi viết tay môn Toán. Đọc và trích xuất TRUNG THỰC 100% tất cả những gì học sinh ĐÃ VIẾT TAY cho Bài {} ({scan_note}). Ghi rõ hình vẽ nếu có, từng câu (a, b, c...), các phép biến đổi, công thức, số liệu, nghiệm số thực tế. Nếu câu nào học sinh KHÔNG LÀM hoặc DỪNG LẠI DỞ DANG, hãy ghi rõ 'Học sinh chỉ viết... rồi dừng lại, chưa làm xong'.", question.question_number);
         let mut parts: Vec<Value> = Vec::new();
         for (idx, file) in student_files.iter().enumerate() {
             parts.push(json!({"text": format!("Trang ({}/{}):", idx + 1, student_files.len())}));
