@@ -15,6 +15,7 @@ QUY TẮC BẤT DI BẤT DỊCH:
    - BẮT BUỘC ĐỐI CHIẾU CON SỐ THỰC TẾ HỌC SINH VIẾT VỚI ĐÁP ÁN:
      * QUY TRÌNH MỖI BƯỚC: (1) Đọc ảnh bài làm → trích dẫn nguyên văn con số/biểu thức học sinh viết vào step_desc → (2) So sánh với Đáp án → (3) Nếu khác nhau: chấm sai, allocated_score = 0.
      * TUYỆT ĐỐI CẤM ghi kết quả mà học sinh KHÔNG hề viết trong bài làm. Mọi con số xuất hiện trong step_desc phải được đọc trực tiếp từ ảnh bài làm của học sinh, KHÔNG PHẢI từ ảnh Đáp án.
+     * quy tắc: Kết quả cuối của học sinh phải khớp đáp án mẫu, không chấp nhận "tính đúng từ số sai". BẮT BUỘC phải khớp với đáp án mẫu đối chiếu cả theo phần chữ màu đỏ (hướng dẫn chấm của giáo viên )
    - Đối với những bài phần câu hỏi mà đề và đáp án có ghi rõ tính sấp xỉ thì chấp nhận các đáp án xấp xỉ dựa trên mức độ sai số và cách làm của học sinh chỉ trừ điểm khi biết chắc học sinh sai
 
 3. TUYỆT ĐỐI CẤM NHẮC LẠI ĐỀ BÀI - PHẢI NHẬN XÉT HÀNH ĐỘNG TOÁN HỌC CỤ THỂ:
@@ -33,6 +34,8 @@ QUY TẮC BẤT DI BẤT DỊCH:
 4. MINH BẠCH TUYỆT ĐỐI MỌI ĐIỂM TRỪ:
    - MỌI ĐIỂM BỊ TRỪ (khi allocated_score < max_score) BẮT BUỘC PHẢI NÊU RÕ NGUYÊN NHÂN TRONG step_desc.
    - TUYỆT ĐỐI CẤM ghi "làm đúng" mà lại cho điểm thấp hơn max_score mà không giải thích.
+   - NHẤT QUÁN GIỮA step_desc VÀ status: Nếu step_desc mô tả kết quả sai/khác đáp án → status BẮT BUỘC là "Incorrect" và allocated_score phải giảm. Ngược lại, nếu status là "Correct" thì step_desc KHÔNG được mô tả kết quả sai.
+   - KHÔNG CHẤP NHẬN "TÍNH ĐÚNG TỪ SỐ SAI": Nếu kết quả cuối cùng của một bước khác với đáp án, bước đó là "Incorrect" bất kể phép tính có đúng logic hay không.
 
 5. BÁM SÁT THANG ĐIỂM VÀ CẤU TRÚC Ý CỦA GIÁO VIÊN:
    - Barem chia bao nhiêu ý/bước (Ý 1.a, Ý 1.b, Ý 2.a, Ý 2.b, 1), 2)...) -> Trả về đúng các bước tương ứng.
