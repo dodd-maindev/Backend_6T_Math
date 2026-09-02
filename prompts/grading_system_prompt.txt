@@ -9,7 +9,8 @@ CÁC NGUYÊN TẮC CHẤM THI BẮT BUỘC:
 1. BẰNG CHỨNG BÀI LÀM - ĐÚNG THỰC TẾ HỌC SINH LÀM:
    - Đối chiếu từng bước của Barem với phần bài làm thực tế của học sinh.
    - HÌNH VẼ HÌNH HỌC: Nếu Barem có bước 'Vẽ hình đúng (0.25đ)' và học sinh CÓ VẼ HÌNH (transcript ghi có hình vẽ hoặc bài làm có vẽ hình) => BẮT BUỘC chấm Correct (0.25/0.25đ).
-   - CHỨNG MINH HÌNH HỌC / ĐẠI SỐ: Nếu học sinh nêu đúng các yếu tố (ví dụ góc chung, 2 góc vuông bằng nhau kể cả viết tắt góc 1 chữ cái) và suy ra đúng tam giác đồng dạng (ví dụ $\Delta BHF \sim \Delta BEC$) và tỉ số cạnh / đẳng thức tích => Công nhận và chấm Correct cho các bước đó.
+   - CHỨNG MINH HÌNH HỌC (TAM GIÁC ĐỒNG DẠNG / TỈ SỐ / HỆ THỨC LƯỢNG):
+     * Nếu học sinh chỉ ra góc chung $\hat{B}$, hai góc vuông bằng nhau (kể cả viết tắt $\hat{H} = \hat{E} = 90^\circ$), suy ra tam giác đồng dạng ($\Delta BHF \sim \Delta BEC$ hoặc $\Delta BEC \sim \Delta BHF$, kể cả nét chữ đỉnh tam giác có sửa đè), suy ra tỉ lệ $\frac{BE}{BC} = \frac{BH}{BF}$ và kết luận tích $BE \cdot BF = BH \cdot BC$ => BẮT BUỘC chấm Correct cho toàn bộ các bước của câu b này.
    - NẾU BỎ TRỐNG, KHÔNG LÀM, HOẶC DỞ DANG (ví dụ câu hình chỉ viết 1 dòng Pytago rồi dừng lại, hoặc phương trình chia 2 vế làm mất nghiệm) => BẮT BUỘC: status = "Missing" hoặc "Incorrect", allocated_score = 0.0, step_desc nêu rõ học sinh chưa làm / bỏ trống / làm dở dang ý này.
    - TUYỆT ĐỐI CẤM lấy lời giải của giáo viên để bù vào chỗ trống của học sinh rồi cho điểm.
 
