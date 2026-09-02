@@ -1,6 +1,7 @@
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde_json::{json, Value};
 use crate::models::assignment::AssignmentQuestion;
+use crate::services::score_sanitizer;
 use crate::utils::gemini_client::GeminiClient;
 
 #[derive(Clone, Debug)]
@@ -18,6 +19,7 @@ impl GradingService {
         Ok(Self { client: GeminiClient::from_env()? })
     }
 
+    /// Grades a single question by sending student + teacher assets to Gemini.
     pub async fn grade_question(&self, question: &AssignmentQuestion, student_files: &[StudentFilePayload], is_targeted_scan: bool) -> Result<Value, String> {
         let sys_prompt = self.build_system_instruction(question.question_number, is_targeted_scan).await;
         let mut parts: Vec<Value> = Vec::new();
@@ -32,46 +34,25 @@ impl GradingService {
         self.append_question_assets(&mut parts, question).await;
 
         let mut feedback = self.client.evaluate_submission(&sys_prompt, parts).await?;
-        Self::sanitize_scores(&mut feedback);
+        let q_max = question.max_score.to_string().parse::<f64>().unwrap_or(0.0);
+        score_sanitizer::sanitize_scores(&mut feedback, q_max);
         feedback["question_number"] = json!(question.question_number);
         Ok(feedback)
     }
 
+    /// Builds the system instruction from the prompt template file.
     async fn build_system_instruction(&self, q_num: i32, is_targeted_scan: bool) -> String {
         let scan_note = if is_targeted_scan {
-            format!("\nLƯU Ý ĐẶC BIỆT: Trong toàn bộ tài liệu bài làm học sinh (gồm nhiều trang/PDF), hãy TÌM VÀ CHỈ CHẤM DUY NHẤT Bài {}. Bỏ qua tất cả các bài khác. Nếu học sinh không làm Bài {}, trả về 0 điểm và ghi rõ 'Không tìm thấy bài làm cho câu này'.", q_num, q_num)
+            "\n\nLƯU Ý ĐẶC BIỆT: Bài làm học sinh được SCAN CHỤP RIÊNG TỪNG CÂU."
         } else {
-            String::new()
+            "\n\nLƯU Ý: Bài làm là ảnh TOÀN BỘ bài, hãy tìm đúng phần Bài tương ứng."
         };
-
-        if let Ok(tpl) = tokio::fs::read_to_string("prompts/grading_system_prompt.txt").await {
-            return tpl.replace("{QUESTION_NUMBER}", &q_num.to_string()).replace("{SCAN_NOTE}", &scan_note);
-        }
-        format!("Bạn là Giám khảo CLB 6T MATH. Chấm Bài {}.{}", q_num, scan_note)
+        let template = tokio::fs::read_to_string("prompts/grading_system_prompt.txt").await.unwrap_or_default();
+        let prompt = template.replace("{QUESTION_NUMBER}", &q_num.to_string()).replace("{SCAN_NOTE}", scan_note);
+        format!("Bạn là Giám khảo CLB 6T MATH. Chấm Bài {}.{}", q_num, prompt)
     }
 
-    fn sanitize_scores(feedback: &mut Value) {
-        let mut total_score = 0.0;
-        if let Some(Value::Array(questions)) = feedback.get_mut("questions") {
-            for q in questions {
-                let mut q_alloc = 0.0;
-                if let Some(Value::Array(steps)) = q.get_mut("steps") {
-                    for s in steps {
-                        let max = s.get("max_score").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                        let mut alloc = s.get("allocated_score").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                        if alloc > max { alloc = max; }
-                        if alloc < 0.0 { alloc = 0.0; }
-                        s["allocated_score"] = json!(alloc);
-                        q_alloc += alloc;
-                    }
-                }
-                q["allocated_score"] = json!(q_alloc);
-                total_score += q_alloc;
-            }
-        }
-        feedback["score"] = json!(total_score);
-    }
-
+    /// Appends question and solution images as inline data parts.
     async fn append_question_assets(&self, parts: &mut Vec<Value>, question: &AssignmentQuestion) {
         if let Some(Value::Array(arr)) = &question.question_image_urls {
             for v in arr {
@@ -90,7 +71,8 @@ impl GradingService {
         if sol_urls.is_empty() && !question.reference_image_url.is_empty() {
             sol_urls.push(question.reference_image_url.clone());
         }
-        parts.push(json!({"text": format!("Ảnh Đáp án mẫu & Thang điểm Bài {} (Lưu ý: {}):", question.question_number, question.native_prompt.as_deref().unwrap_or("Chuẩn"))}));
+        let note = question.native_prompt.as_deref().unwrap_or("Chuẩn");
+        parts.push(json!({"text": format!("Ảnh Đáp án mẫu & Thang điểm Bài {} (Lưu ý: {}):", question.question_number, note)}));
         for url in &sol_urls {
             if let Ok(bytes) = tokio::fs::read(format!(".{}", url)).await {
                 parts.push(json!({"inlineData": {"mimeType": "image/jpeg", "data": STANDARD.encode(&bytes)}}));
