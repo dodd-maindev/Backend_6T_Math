@@ -24,13 +24,13 @@ impl GradingService {
         let sys_prompt = self.build_system_instruction(question.question_number, is_targeted_scan).await;
         let mut parts: Vec<Value> = Vec::new();
 
-        parts.push(json!({"text": "=== [BÀI LÀM CỦA HỌC SINH CẦN ĐÁNH GIÁ] ==="}));
+        parts.push(json!({"text": "=== [PHẦN 1: TÀI LIỆU BÀI LÀM HỌC SINH (CHỮ VIẾT TAY CẦN CHẤM)] ==="}));
         for (idx, file) in student_files.iter().enumerate() {
-            parts.push(json!({"text": format!("Tài liệu bài làm học sinh ({}/{} - {}):", idx + 1, student_files.len(), file.mime_type)}));
+            parts.push(json!({"text": format!("Trang bài làm viết tay học sinh ({}/{} - {}):", idx + 1, student_files.len(), file.mime_type)}));
             parts.push(json!({"inlineData": {"mimeType": file.mime_type, "data": file.base64_data}}));
         }
 
-        parts.push(json!({"text": format!("=== [CHUẨN MỰC GIÁO VIÊN] BÀI SỐ {} (ĐIỂM TỐI ĐA: {} ĐIỂM) ===", question.question_number, question.max_score)}));
+        parts.push(json!({"text": format!("=== [PHẦN 2: CHUẨN MỰC CỦA GIÁO VIÊN BÀI SỐ {} (TỔNG ĐIỂM: {} ĐIỂM) - CHỈ DÙNG ĐỐI CHIẾU, KHÔNG PHẢI BÀI HỌC SINH] ===", question.question_number, question.max_score)}));
         self.append_question_assets(&mut parts, question).await;
 
         let mut feedback = self.client.evaluate_submission(&sys_prompt, parts).await?;
@@ -43,9 +43,9 @@ impl GradingService {
     /// Builds the system instruction from the prompt template file.
     async fn build_system_instruction(&self, q_num: i32, is_targeted_scan: bool) -> String {
         let scan_note = if is_targeted_scan {
-            "\n\nLƯU Ý ĐẶC BIỆT: Bài làm học sinh được SCAN CHỤP RIÊNG TỪNG CÂU."
+            "\n\nLƯU Ý: Bài làm học sinh là ảnh chụp riêng bài này."
         } else {
-            "\n\nLƯU Ý: Bài làm là ảnh TOÀN BỘ bài, hãy tìm đúng phần Bài tương ứng."
+            "\n\nLƯU Ý: Bài làm học sinh là toàn bộ bài thi, hãy tìm đúng phần chữ viết tay của Bài tương ứng."
         };
         let template = tokio::fs::read_to_string("prompts/grading_system_prompt.txt").await.unwrap_or_default();
         let prompt = template.replace("{QUESTION_NUMBER}", &q_num.to_string()).replace("{SCAN_NOTE}", scan_note);
@@ -58,7 +58,7 @@ impl GradingService {
             for v in arr {
                 if let Some(s) = v.as_str() {
                     if let Ok(bytes) = tokio::fs::read(format!(".{}", s)).await {
-                        parts.push(json!({"text": format!("Ảnh Đề bài (có thể chứa thang điểm) {}:", question.question_number)}));
+                        parts.push(json!({"text": format!("Ảnh Đề bài in Bài {}:", question.question_number)}));
                         parts.push(json!({"inlineData": {"mimeType": "image/jpeg", "data": STANDARD.encode(&bytes)}}));
                     }
                 }
@@ -72,7 +72,7 @@ impl GradingService {
             sol_urls.push(question.reference_image_url.clone());
         }
         let note = question.native_prompt.as_deref().unwrap_or("Chuẩn");
-        parts.push(json!({"text": format!("Ảnh Đáp án mẫu & Thang điểm Bài {} (Lưu ý: {}):", question.question_number, note)}));
+        parts.push(json!({"text": format!("Ảnh Đáp án & Barem chuẩn Bài {} (Chữ ĐEN: Lời giải mẫu GV; Chữ ĐỎ: Thang điểm & Hướng dẫn chấm):", question.question_number)}));
         for url in &sol_urls {
             if let Ok(bytes) = tokio::fs::read(format!(".{}", url)).await {
                 parts.push(json!({"inlineData": {"mimeType": "image/jpeg", "data": STANDARD.encode(&bytes)}}));

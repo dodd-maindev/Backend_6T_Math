@@ -52,7 +52,7 @@ pub async fn grade_submission(
     SubmissionLimiter::check_single_question(&pool, &user.role, s_id, a_id, question.question_number).await?;
 
     let grader = GradingService::new().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
-    let mut feedback = grader.grade_question(question, &form.student_files, false).await.map_err(|e| (StatusCode::BAD_GATEWAY, e))?;
+    let mut feedback = grader.grade_question(question, &form.student_files, true).await.map_err(|e| (StatusCode::BAD_GATEWAY, e))?;
     feedback["student_image_urls"] = json!(form.file_urls);
     let score = feedback["score"].as_f64().unwrap_or(0.0);
 
@@ -90,7 +90,7 @@ pub async fn grade_full_exam(
 
     for q in questions {
         let (g, f) = (Arc::clone(&grader), Arc::clone(&files_arc));
-        set.spawn(async move { (q.question_number, g.grade_question(&q, &f, true).await) });
+        set.spawn(async move { (q.question_number, g.grade_question(&q, &f, false).await) });
     }
 
     let mut saved_subs = Vec::new();
