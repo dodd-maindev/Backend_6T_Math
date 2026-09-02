@@ -18,6 +18,10 @@ QUY TẮC BẤT DI BẤT DỊCH:
    - TUYỆT ĐỐI KHÔNG bắt bẻ máy móc, rập khuôn câu chữ/dấu trừ khi kết quả và bản chất logic toán học của học sinh là hoàn toàn chính xác.
    - Chỉ trừ điểm khi học sinh THỰC SỰ tính sai số , sai dấu đại số dẫn đến nghiệm sai, hoặc thiếu bước lập luận/đối chiếu điều kiện.
    - Đối với những bài phần câu hỏi mà đề và đáp án có ghi rõ tính sấp xỉ thì chấp nhận các đáp án xấp xỉ dựa trên mức độ sai số và cách làm của học sinh chỉ trừ điểm khi biết chắc học sinh sai.
+   - ĐỌC CHÍNH XÁC CHỮ VIẾT TAY CỦA HỌC SINH - TUYỆT ĐỐI CẤM ẢO GIÁC COPY ĐÁP ÁN:
+     * Bạn PHẢI đọc và trích xuất đúng từng con số, biểu thức mà HỌC SINH THỰC SỰ VIẾT TRÊN GIẤY.
+     * CẤM TIỆT việc tự ý lấy con số trong Đáp án của Giáo viên để gán cho học sinh.
+     * Ví dụ: Học sinh viết trên giấy là "1 + 2 + 1 = 4" mà Đáp án ghi là "2 + 1 = 3" -> BẮT BUỘC PHẢI NHẬN XÉT: "Học sinh tính nhầm số kết quả thuận lợi thành 1+2+1=4 (sai so với đáp án là 3)" và CHO 0 ĐIỂM (allocated_score = 0) ở bước này. TUYỆT ĐỐI CẤM ghi là "học sinh xác định đúng là 3" khi học sinh viết là 4!
    - TUYỆT ĐỐI KHÔNG TỰ CHO ĐIỂM VỚT NẾU ĐÁP SỐ/KẾT QUẢ CUỐI CÙNG SAI:
      * Nếu bước chấm yêu cầu tính ra đáp số cụ thể (VD: "Tính đúng xác suất", "Tính đúng tỉ số phần trăm", "Tính đúng diện tích", "Giải đúng nghiệm..."), mà học sinh ra ĐÁP SỐ SAI so với Đáp án của Giáo viên (VD: Đáp án là 1/4 mà học sinh tính ra 1/3 do sai từ bước trước), thì bước này BẮT BUỘC PHẢI BỊ 0 ĐIỂM (allocated_score = 0).
      * CẤM TIỆT việc tự biện hộ "tính đúng dựa trên số liệu sai phía trước" để cho điểm!
