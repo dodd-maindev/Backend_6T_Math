@@ -14,7 +14,11 @@ TIÊU CHÍ PHÁT HIỆN ĐÚNG / SAI CHO TỪNG BƯỚC:
 
 1. ĐÁNH GIÁ "Correct" (LÀM ĐÚNG):
    - HÌNH VẼ HÌNH HỌC: Nếu Barem có bước vẽ hình và bài làm của học sinh có ghi 'Hình vẽ: Có vẽ hình...' hoặc học sinh có vẽ hình => BẮT BUỘC chấm status: "Correct" cho bước vẽ hình (cho đủ max_score).
-   - CHỨNG MINH HÌNH HỌC (TAM GIÁC ĐỒNG DẠNG / TỈ SỐ / TÍCH ĐOẠN THẲNG): Học sinh chỉ ra góc vuông, góc chung, suy ra tam giác đồng dạng $\Delta BHF \sim \Delta BEC$ (kể cả thứ tự đỉnh $\Delta BEC \sim \Delta BHF$), lập tỉ số $\frac{BH}{BE} = \frac{BF}{BC}$ và kết luận tích $BE \cdot BF = BH \cdot BC$ => BẮT BUỘC chấm status: "Correct", allocated_score = max_score.
+   - ĐIỀU KIỆN ĐẶT ẨN (BÀI 4): Học sinh đặt điều kiện $x > 0$ (kể cả có hoặc không có $x \in \mathbb{N}^*$) cho số sản phẩm/chiếc thảm => BẮT BUỘC chấm status: "Correct" cho bước điều kiện.
+   - SỐ ĐO GÓC LƯỢNG GIÁC (BÀI 5): Tính ra tỉ số $\cos C = \frac{25}{32}$ và suy ra góc xấp xỉ $38^\circ 37'$ (công nhận cả $38^\circ 3,7'$ hoặc $38\text{ độ } 37'$ do nét chữ viết tay OCR) => BẮT BUỘC chấm status: "Correct" cho cả bước suy ra góc và bước kết luận.
+   - CHỨNG MINH HÌNH HỌC (BÀI 6):
+     + Câu b: Chỉ ra góc vuông, góc chung, suy ra $\Delta BHF \sim \Delta BEC$, lập tỉ số $\frac{BH}{BE} = \frac{BF}{BC}$ và kết luận $BE \cdot BF = BH \cdot BC$ => BẮT BUỘC chấm status: "Correct".
+     + Câu c: Chứng minh $\Delta BEM \sim \Delta BMF \implies \widehat{BEM} = \widehat{BMF} = 90^\circ$, áp dụng định lý Py-ta-go vào $\Delta BMF$ và $\Delta BHF$ để kết luận đẳng thức $FM^2 + BA^2 = BH^2 + FH^2$ (hoặc $BH^2 + FH^2 = FM^2 + BM^2$) => BẮT BUỘC chấm status: "Correct" (0.5 điểm), không trừ điểm nếu OCR có lỗi chính tả F thành E.
    - Học sinh biến đổi đúng, tính toán đúng và ra kết quả đúng khớp với bước đó trong Barem.
    - Công nhận các cách làm khác hoặc thứ tự biến đổi khác nếu lập luận logic đúng và cho ra kết quả đúng.
    - Khi Correct => allocated_score = max_score của bước đó.

@@ -22,9 +22,9 @@ impl GradingService {
     pub async fn transcribe_full_exam(&self, files: &[StudentFilePayload]) -> Result<HashMap<i32, String>, String> {
         let sys = "Chuyên gia OCR bài thi Toán. Đọc tỉ mỉ tất cả các trang, trích xuất 100% tất cả các bài.\n\
         QUY TẮC:\n\
-        1. HÌNH VẼ: Nếu có hình vẽ hình học (như tam giác, góc vuông, đường tròn), BẮT BUỘC ghi rõ ở đầu bài đó: 'Hình vẽ: Có vẽ hình đầy đủ các đỉnh và góc vuông'.\n\
-        2. LIÊN TRANG (XUỐNG TRANG): Nếu bài viết dở ở cuối trang trước và viết tiếp ở đầu trang sau (như câu b, c), BẮT BUỘC GHÉP NỐI vào cùng bài dù đầu trang sau không ghi lại số bài.\n\
-        3. NHẬN DIỆN NÉT CHỮ: Đọc đúng đỉnh F, tỉ số BF/BC và tích BE.BF = BH.BC (tránh đọc nhầm thành BE^2). Bỏ qua phần gạch xóa theo dòng biến đổi tiếp theo.";
+        1. HÌNH VẼ: Nếu có hình vẽ hình học (tam giác, góc vuông), BẮT BUỘC ghi ở đầu bài đó: 'Hình vẽ: Có vẽ hình đầy đủ các đỉnh và góc vuông'.\n\
+        2. LIÊN TRANG: Nếu bài viết dở ở cuối trang trước và viết tiếp ở đầu trang sau (như câu b, c), BẮT BUỘC GHÉP NỐI vào cùng bài.\n\
+        3. CHÍNH TẢ TOÁN: Góc phút ghi số nguyên 38°37' (cấm ghi dấu phẩy 3,7'). Đọc đúng đỉnh F, tỉ số BF/BC, tích BE.BF = BH.BC, tam giác BHF, BF^2 = BH^2 + FH^2.";
 
         let mut parts = Vec::new();
         for (idx, file) in files.iter().enumerate() {
