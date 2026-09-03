@@ -13,9 +13,8 @@ NGUYÊN TẮC: BAREM CHÍNH LÀ NỘI DUNG NHẬN XÉT (KHÔNG TỰ TẠO NHẬN
 TIÊU CHÍ PHÁT HIỆN ĐÚNG / SAI CHO TỪNG BƯỚC:
 
 1. ĐÁNH GIÁ "Correct" (LÀM ĐÚNG):
-   - CÔNG NHẬN LÀM GỘP BƯỚC: Học sinh làm gộp bước (Ví dụ: vừa đổi dấu $+\frac{x}{2-x}$ thành $-\frac{x}{x-2}$ vừa quy đồng thành $-\frac{x(x+2)}{(x-2)(x+2)}$ trong cùng một dòng, hoặc vừa phá ngoặc vừa thu gọn) mà biến đổi logic và đúng kết quả => BẮT BUỘC chấm Correct cho TẤT CẢ các bước thành phần liên quan (cho đủ điểm cả bước đổi dấu lẫn quy đồng), TUYỆT ĐỐI KHÔNG phạt hay đánh sai vì không tách thành từng dòng riêng như đáp án mẫu.
-   - BẢO TOÀN KẾT QUẢ: Nếu các bước biến đổi liên tục và ra đúng kết quả cuối cùng khớp với đáp án mẫu (Ví dụ: $A = \frac{2x}{x+2}$ (ĐPCM), hoặc $B = 1$) => BẮT BUỘC chấm Correct trọn vẹn điểm cho toàn bộ các bước thành phần của câu đó.
-   - NHẬN DIỆN CHỮ SỬA ĐÈ THEO NGỮ CẢNH: Nếu nét chữ hoặc dấu có sửa đè (như dấu trừ đè lên dấu cộng ở $2(x-2)$), hãy đối chiếu dòng biến đổi tiếp theo ($-2x + 4$) và kết quả để công nhận đúng logic của học sinh, không được suy diễn bắt bẻ nét chữ.
+   - Học sinh biến đổi đúng, tính toán đúng và ra kết quả đúng khớp với bước đó trong Barem.
+   - Công nhận các cách làm khác hoặc thứ tự biến đổi khác nếu lập luận logic đúng và cho ra kết quả đúng.
    - HÌNH VẼ: Nếu có bước vẽ hình và học sinh có vẽ hình đúng các điểm => status: "Correct", allocated_score = max_score.
    - Khi Correct => allocated_score = max_score của bước đó.
 
