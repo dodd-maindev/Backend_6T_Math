@@ -44,7 +44,7 @@ pub async fn grade_submission(
     verify_turnstile_token(&cf_secret, form.turnstile_token.as_deref().unwrap_or(""), None).await.map_err(|e| (StatusCode::FORBIDDEN, e))?;
 
     let questions = sqlx::query_as::<_, AssignmentQuestion>(
-        "SELECT id, assignment_id, question_number, reference_image_url, question_image_urls, solution_image_urls, native_prompt, max_score, created_at \
+        "SELECT id, assignment_id, question_number, reference_image_url, question_image_urls, solution_image_urls, native_prompt, max_score, barem_json, created_at \
          FROM assignment_questions WHERE assignment_id = $1 ORDER BY question_number ASC"
     ).bind(a_id).fetch_all(&pool).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -78,7 +78,7 @@ pub async fn grade_full_exam(
     verify_turnstile_token(&cf_secret, form.turnstile_token.as_deref().unwrap_or(""), None).await.map_err(|e| (StatusCode::FORBIDDEN, e))?;
 
     let questions = sqlx::query_as::<_, AssignmentQuestion>(
-        "SELECT id, assignment_id, question_number, reference_image_url, question_image_urls, solution_image_urls, native_prompt, max_score, created_at \
+        "SELECT id, assignment_id, question_number, reference_image_url, question_image_urls, solution_image_urls, native_prompt, max_score, barem_json, created_at \
          FROM assignment_questions WHERE assignment_id = $1 ORDER BY question_number ASC"
     ).bind(a_id).fetch_all(&pool).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     if questions.is_empty() { return Err((StatusCode::BAD_REQUEST, "No questions found".into()))?; }

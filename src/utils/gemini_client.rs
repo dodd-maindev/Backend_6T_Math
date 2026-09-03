@@ -1,6 +1,6 @@
 use reqwest::{Client, StatusCode};
 use serde_json::Value;
-use crate::utils::{api_key_pool::ApiKeyPool, gemini_payload::{build_full_exam_transcription_payload, build_grading_payload, build_transcription_payload}, model_registry::ModelRegistry};
+use crate::utils::{api_key_pool::ApiKeyPool, gemini_payload::{build_barem_extraction_payload, build_full_exam_transcription_payload, build_grading_payload, build_transcription_payload}, model_registry::ModelRegistry};
 
 /// Client for communicating with Google Gemini API with smart multi-key load balancing and 20-model fallback.
 #[derive(Clone, Debug)]
@@ -19,6 +19,13 @@ impl GeminiClient {
     /// Evaluates submission and parses structured JSON grading result.
     pub async fn evaluate_submission(&self, sys: &str, parts: Vec<Value>) -> Result<Value, String> {
         let payload = build_grading_payload(sys, parts);
+        let raw_text = self.execute_request(&payload).await?;
+        Self::parse_clean_json(&raw_text)
+    }
+
+    /// Extracts canonical grading barem from teacher solution images.
+    pub async fn extract_barem(&self, sys: &str, parts: Vec<Value>) -> Result<Value, String> {
+        let payload = build_barem_extraction_payload(sys, parts);
         let raw_text = self.execute_request(&payload).await?;
         Self::parse_clean_json(&raw_text)
     }

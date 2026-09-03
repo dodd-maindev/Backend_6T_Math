@@ -31,7 +31,7 @@ pub async fn grade_student_uploads(
 
     let questions = sqlx::query_as::<_, AssignmentQuestion>(
         "SELECT id, assignment_id, question_number, reference_image_url, question_image_urls, \
-         solution_image_urls, native_prompt, max_score, created_at \
+         solution_image_urls, native_prompt, max_score, barem_json, created_at \
          FROM assignment_questions WHERE assignment_id = $1"
     ).bind(req.assignment_id).fetch_all(&pool).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 

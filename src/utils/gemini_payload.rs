@@ -42,6 +42,36 @@ pub fn build_grading_payload(sys: &str, parts: Vec<Value>) -> Value {
     })
 }
 
+/// Builds payload for extracting canonical grading barem from teacher solution image.
+pub fn build_barem_extraction_payload(sys: &str, parts: Vec<Value>) -> Value {
+    json!({
+        "systemInstruction": {"parts": [{"text": sys}]},
+        "contents": [{"parts": parts}],
+        "generationConfig": {
+            "temperature": 0.0, "topP": 0.1, "seed": 42,
+            "responseMimeType": "application/json",
+            "responseSchema": {
+                "type": "OBJECT",
+                "properties": {
+                    "question_title": {"type": "STRING"}, "max_score": {"type": "NUMBER"},
+                    "steps": {
+                        "type": "ARRAY",
+                        "items": {
+                            "type": "OBJECT",
+                            "properties": {
+                                "step_id": {"type": "INTEGER"}, "step_title": {"type": "STRING"},
+                                "max_score": {"type": "NUMBER"}, "criteria": {"type": "STRING"}
+                            },
+                            "required": ["step_id", "step_title", "max_score", "criteria"]
+                        }
+                    }
+                },
+                "required": ["question_title", "max_score", "steps"]
+            }
+        }
+    })
+}
+
 /// Builds payload for structured full exam transcription (Phase 1 Full Exam OCR).
 pub fn build_full_exam_transcription_payload(sys: &str, parts: Vec<Value>) -> Value {
     json!({
@@ -58,8 +88,7 @@ pub fn build_full_exam_transcription_payload(sys: &str, parts: Vec<Value>) -> Va
                         "items": {
                             "type": "OBJECT",
                             "properties": {
-                                "question_number": {"type": "INTEGER"},
-                                "student_work": {"type": "STRING"}
+                                "question_number": {"type": "INTEGER"}, "student_work": {"type": "STRING"}
                             },
                             "required": ["question_number", "student_work"]
                         }

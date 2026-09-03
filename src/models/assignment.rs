@@ -26,5 +26,11 @@ pub struct AssignmentQuestion {
     pub solution_image_urls: Option<serde_json::Value>,
     pub native_prompt: Option<String>,
     pub max_score: BigDecimal,
+    pub barem_json: Option<serde_json::Value>,
     pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateBaremRequest {
+    pub barem_json: serde_json::Value,
 }

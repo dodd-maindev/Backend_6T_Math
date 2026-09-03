@@ -10,7 +10,7 @@ pub async fn list_questions(
     Path(assignment_id): Path<Uuid>,
 ) -> Result<Json<Vec<AssignmentQuestion>>, (StatusCode, &'static str)> {
     let mut questions = sqlx::query_as::<_, AssignmentQuestion>(
-        "SELECT id, assignment_id, question_number, reference_image_url, question_image_urls, solution_image_urls, native_prompt, max_score, created_at \
+        "SELECT id, assignment_id, question_number, reference_image_url, question_image_urls, solution_image_urls, native_prompt, max_score, barem_json, created_at \
          FROM assignment_questions WHERE assignment_id = $1 ORDER BY question_number ASC"
     )
     .bind(assignment_id).fetch_all(&pool).await
@@ -21,6 +21,7 @@ pub async fn list_questions(
             q.reference_image_url = String::new();
             q.solution_image_urls = Some(serde_json::json!([]));
             q.native_prompt = None;
+            q.barem_json = None;
         }
     }
     Ok(Json(questions))

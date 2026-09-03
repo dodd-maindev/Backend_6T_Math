@@ -19,6 +19,7 @@ use crate::{
         grading::{list_student_submissions, grade_submission, grade_full_exam},
         upload::{upload_question_images, list_my_uploads, get_upload_summary},
         grade_uploads::grade_student_uploads,
+        barem::{get_question_barem, extract_question_barem, update_question_barem},
     },
 };
 
@@ -48,6 +49,8 @@ pub fn create_router(pool: PgPool, config: Config) -> Router {
         .route("/assignment/:id/questions", get(list_questions))
         .route("/assignment/:id/upload-summary", get(get_upload_summary))
         .route("/question/:id", delete(delete_question))
+        .route("/question/:id/barem", get(get_question_barem).put(update_question_barem))
+        .route("/question/:id/extract-barem", post(extract_question_barem))
         .route("/student/submission", post(grade_submission))
         .route("/student/grade-full-exam", post(grade_full_exam))
         .route("/student/:id/submissions", get(list_student_submissions))
