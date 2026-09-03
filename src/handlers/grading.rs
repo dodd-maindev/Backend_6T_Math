@@ -94,7 +94,7 @@ pub async fn grade_full_exam(
         set.spawn(async move {
             let res = if let Some(tr) = t.get(&q.question_number) {
                 if !tr.trim().is_empty() && !tr.contains("không làm bài này") {
-                    g.grade_question_with_transcript(&q, tr, &f).await
+                    g.grade_question_with_transcript(&q, tr).await
                 } else {
                     g.grade_question(&q, &f, false).await
                 }
