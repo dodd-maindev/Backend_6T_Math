@@ -18,12 +18,13 @@ impl GradingService {
         Ok(Self { client: GeminiClient::from_env()? })
     }
 
-    /// Transcribes full exam once across all pages with robust question number and handwriting recognition.
-    pub async fn transcribe_full_exam(&self, student_files: &[StudentFilePayload]) -> Result<HashMap<i32, String>, String> {
-        let sys = "Bạn là chuyên gia OCR bài thi viết tay môn Toán. Trích xuất TRUNG THỰC 100% tất cả các bài thi.";
+    /// Transcribes full exam with multi-page stitching and handwriting correction.
+    pub async fn transcribe_full_exam(&self, files: &[StudentFilePayload]) -> Result<HashMap<i32, String>, String> {
+        let sys = "Chuyên gia OCR bài thi Toán. Đọc tỉ mỉ tất cả các trang, trích xuất 100% tất cả các bài.\n\
+        QUY TẮC: 1. LIÊN TRANG (XUỐNG TRANG): Nếu bài viết dở ở cuối trang trước và viết tiếp ở đầu trang sau (như câu b, c), BẮT BUỘC GHÉP NỐI vào cùng bài dù đầu trang sau không ghi lại số bài. 2. SỬA ĐÈ/GẠCH XÓA: Nhận diện nét sửa đè đúng và bỏ qua phần gạch xóa theo dòng biến đổi tiếp theo. 3. Trích xuất đủ các câu (a, b, c...), phân thức, kết luận.";
         let mut parts = Vec::new();
-        for (idx, file) in student_files.iter().enumerate() {
-            parts.push(json!({"text": format!("Trang ({}/{}):", idx + 1, student_files.len())}));
+        for (idx, file) in files.iter().enumerate() {
+            parts.push(json!({"text": format!("Trang ({}/{}):", idx + 1, files.len())}));
             parts.push(json!({"inlineData": {"mimeType": file.mime_type, "data": file.base64_data}}));
         }
         let res = self.client.transcribe_full_exam(sys, parts).await?;
@@ -56,17 +57,17 @@ impl GradingService {
         Ok(feedback)
     }
 
-    /// Grades a single question on-demand (fallback or single submission).
-    pub async fn grade_question(&self, question: &AssignmentQuestion, files: &[StudentFilePayload], is_targeted: bool) -> Result<Value, String> {
+    /// Grades a single question on-demand with multi-page continuation recognition.
+    pub async fn grade_question(&self, q: &AssignmentQuestion, files: &[StudentFilePayload], is_targeted: bool) -> Result<Value, String> {
         let note = if is_targeted { "Ảnh chụp riêng bài này." } else { "Tìm đúng phần viết tay bài này." };
-        let sys = format!("OCR bài thi viết tay môn Toán Bài {}. {note}. Trích xuất trung thực.", question.question_number);
+        let sys = format!("Chuyên gia OCR bài thi Toán Bài {}. {note}\nQUY TẮC: 1. LIÊN TRANG: Nếu Bài {} viết dở ở cuối trang trước và viết tiếp ở đầu trang sau (dù không ghi lại số Bài {}), BẮT BUỘC GHÉP NỐI đủ các câu (a, b, c...). 2. SỬA ĐÈ: Đọc theo nét sửa đúng đè lên và dòng biến đổi tiếp theo. Trích xuất trung thực.", q.question_number, q.question_number, q.question_number);
         let mut parts = Vec::new();
         for (idx, f) in files.iter().enumerate() {
             parts.push(json!({"text": format!("Trang ({}/{}):", idx + 1, files.len())}));
             parts.push(json!({"inlineData": {"mimeType": f.mime_type, "data": f.base64_data}}));
         }
         let transcript = self.client.transcribe_student_work(&sys, parts).await.unwrap_or_else(|_| "Học sinh không làm bài này.".to_string());
-        self.grade_question_with_transcript(question, &transcript).await
+        self.grade_question_with_transcript(q, &transcript).await
     }
 
     async fn append_question_assets(&self, parts: &mut Vec<Value>, question: &AssignmentQuestion) {
