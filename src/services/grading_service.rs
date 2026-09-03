@@ -58,8 +58,7 @@ impl GradingService {
 
     /// Grades a single question on-demand (fallback or single submission).
     pub async fn grade_question(&self, question: &AssignmentQuestion, files: &[StudentFilePayload], is_targeted: bool) -> Result<Value, String> {
-        let note = if is_targeted { "Ảnh chụp riêng bài này." } else { "Tìm đúng phần viết tay bài này." };
-        let sys = format!("OCR bài thi viết tay môn Toán Bài {}. {note}. Trích xuất trung thực.", question.question_number);
+        let sys = format!("OCR bài thi viết tay môn Toán Bài {}. {note}. Trích xuất đầy đủ trung thực tất cả các dòng biến đổi, phân thức, ký hiệu toán học. Nhận diện chữ sửa đè theo ngữ cảnh toán học dòng tiếp theo.", question.question_number);
         let mut parts = Vec::new();
         for (idx, f) in files.iter().enumerate() {
             parts.push(json!({"text": format!("Trang ({}/{}):", idx + 1, files.len())}));
