@@ -51,7 +51,7 @@ impl GeminiClient {
     /// Executes Gemini API request with multi-model fallback and key rotation.
     async fn execute_request(&self, payload: &Value) -> Result<String, String> {
         let candidate_models = ModelRegistry::load_candidate_models(Some(&self.preferred_model)).await;
-        let client = Client::builder().timeout(std::time::Duration::from_secs(45)).build().unwrap_or_default();
+        let client = Client::builder().timeout(std::time::Duration::from_secs(25)).build().unwrap_or_default();
         let mut last_error = String::from("No models available");
 
         for model in &candidate_models {
