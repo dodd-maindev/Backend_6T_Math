@@ -11,10 +11,19 @@ impl BaremService {
     pub async fn extract_canonical_barem(client: &GeminiClient, q: &AssignmentQuestion) -> Result<Value, String> {
         let sys = "Bạn là chuyên gia sư phạm Toán CLB 6T MATH. Nhiệm vụ: Đọc ảnh Lời giải mẫu & Barem điểm của Giáo viên, trích xuất chính xác cấu trúc Barem chấm điểm chuẩn dạng JSON.\n\
         QUY TẮC BẮT BUỘC:\n\
-        1. PHÂN CẤP CÂU CON: Mỗi mốc điểm mực đỏ (0.125đ, 0.25đ, 0.5đ, 1.0đ) là 1 bước trong mảng steps. step_title BẮT BUỘC bắt đầu bằng tiền tố câu tương ứng (Ví dụ: 'Câu a: Thay số đúng', 'Câu b: Đổi dấu đúng', 'Câu b: Quy đồng đúng',...).\n\
-        2. BÀI TOÀN PHẦN (ALL-OR-NOTHING): Nếu một câu (như Câu c) chỉ có 1 dòng chữ đỏ ở cuối dạng 'Suy luận chặt chẽ và xác định đúng hết mới chấm điểm (0,5 điểm)' hoặc 'Đúng hết mới cho điểm' => TẠO ĐÚNG 1 BƯỚC TOÀN PHẦN với max_score ghi trong ngoặc (ví dụ 0.5đ), KHÔNG tự ý chia nhỏ điểm thành phần.\n\
-        3. CHÍNH XÁC ĐIỂM SỐ: max_score của mỗi bước BẮT BUỘC khớp 100% với con số mực đỏ (0.125, 0.25, 0.5, 0.75, 1.0,...). Tổng max_score các steps PHẢI BẰNG ĐÚNG tổng điểm bài thi.\n\
-        4. criteria: Nêu rõ tiêu chuẩn cần đạt cho bước đó (công thức, điều kiện, phép tính, nghiệm số).";
+        1. TRÍCH XUẤT BIỂU THỨC & ĐẲNG THỨC CHI TIẾT (TUYỆT ĐỐI KHÔNG GHI CHUNG CHUNG):\n\
+           - BẮT BUỘC sao chép chính xác biểu thức toán học, phép tính, và nghiệm số trong ảnh vào step_title và criteria (đặt trong $...$).\n\
+           - Ví dụ:\n\
+             * Thay vì 'Câu a: Thay số' => 'Câu a: Thay đúng $x = 1$ ta có $B = \\frac{-1-2}{1-4}$'\n\
+             * Thay vì 'Câu a: Tính toán' => 'Câu a: Tính đúng $B = \\frac{-3}{-3} = 1$'\n\
+             * Thay vì 'Câu b: Đổi dấu' => 'Câu b: Đổi dấu đúng $A = \\frac{3x^2-4}{(x-2)(x+2)} - \\frac{2}{x+2} - \\frac{x}{x-2}$'\n\
+             * Thay vì 'Câu b: Quy đồng' => 'Câu b: Quy đồng đúng $A = \\frac{3x^2-4}{(x-2)(x+2)} - \\frac{2(x-2)}{(x-2)(x+2)} - \\frac{x(x+2)}{(x-2)(x+2)}$'\n\
+             * Thay vì 'Câu b: Phá ngoặc' => 'Câu b: Phá ngoặc đúng $A = \\frac{3x^2-4-2x+4-x^2-2x}{(x-2)(x+2)}$'\n\
+             * Thay vì 'Câu b: Thu gọn' => 'Câu b: Thu gọn đúng $A = \\frac{2x^2-4x}{(x-2)(x+2)}$'\n\
+             * Thay vì 'Câu b: Rút gọn' => 'Câu b: Đặt nhân tử chung và rút gọn ra $A = \\frac{2x}{x+2}$'\n\
+        2. BÀI TOÀN PHẦN (ALL-OR-NOTHING): Nếu một câu (như Câu c) chỉ có 1 dòng chữ đỏ ở cuối dạng 'Suy luận chặt chẽ và xác định đúng hết mới chấm điểm (0,5 điểm)' => TẠO ĐÚNG 1 BƯỚC với max_score = 0.5đ, trích xuất đầy đủ phép biến đổi và nghiệm (ví dụ: 'Câu c: Tính $P = A.B = -2 - \\frac{8}{x-4}$, tìm $x \\in \\{5;6;8;12;3;2;0;-4\\} \\Rightarrow x = 12$').\n\
+        3. CHÍNH XÁC ĐIỂM SỐ: max_score của mỗi bước BẮT BUỘC khớp 100% với con số mực đỏ (0.125, 0.25, 0.5, 0.75, 1.0,...).\n\
+        4. criteria: Nêu cụ thể điều kiện và dòng biến đổi tương ứng.";
 
         let mut parts = Vec::new();
         parts.push(json!({"text": format!("Bài số: {} (Tổng điểm: {}đ)", q.question_number, q.max_score)}));
