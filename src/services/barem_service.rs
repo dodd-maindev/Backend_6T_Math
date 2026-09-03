@@ -11,19 +11,17 @@ impl BaremService {
     pub async fn extract_canonical_barem(client: &GeminiClient, q: &AssignmentQuestion) -> Result<Value, String> {
         let sys = "Bạn là chuyên gia sư phạm Toán CLB 6T MATH. Nhiệm vụ: Đọc ảnh Lời giải mẫu & Barem điểm của Giáo viên, trích xuất chính xác cấu trúc Barem chấm điểm chuẩn dạng JSON.\n\
         QUY TẮC BẮT BUỘC:\n\
-        1. TRÍCH XUẤT BIỂU THỨC & ĐẲNG THỨC CHI TIẾT (TUYỆT ĐỐI KHÔNG GHI CHUNG CHUNG):\n\
-           - BẮT BUỘC sao chép chính xác biểu thức toán học, phép tính, và nghiệm số trong ảnh vào step_title và criteria (đặt trong $...$).\n\
-           - Ví dụ:\n\
-             * Thay vì 'Câu a: Thay số' => 'Câu a: Thay đúng $x = 1$ ta có $B = \\frac{-1-2}{1-4}$'\n\
-             * Thay vì 'Câu a: Tính toán' => 'Câu a: Tính đúng $B = \\frac{-3}{-3} = 1$'\n\
-             * Thay vì 'Câu b: Đổi dấu' => 'Câu b: Đổi dấu đúng $A = \\frac{3x^2-4}{(x-2)(x+2)} - \\frac{2}{x+2} - \\frac{x}{x-2}$'\n\
-             * Thay vì 'Câu b: Quy đồng' => 'Câu b: Quy đồng đúng $A = \\frac{3x^2-4}{(x-2)(x+2)} - \\frac{2(x-2)}{(x-2)(x+2)} - \\frac{x(x+2)}{(x-2)(x+2)}$'\n\
-             * Thay vì 'Câu b: Phá ngoặc' => 'Câu b: Phá ngoặc đúng $A = \\frac{3x^2-4-2x+4-x^2-2x}{(x-2)(x+2)}$'\n\
-             * Thay vì 'Câu b: Thu gọn' => 'Câu b: Thu gọn đúng $A = \\frac{2x^2-4x}{(x-2)(x+2)}$'\n\
-             * Thay vì 'Câu b: Rút gọn' => 'Câu b: Đặt nhân tử chung và rút gọn ra $A = \\frac{2x}{x+2}$'\n\
-        2. BÀI TOÀN PHẦN (ALL-OR-NOTHING): Nếu một câu (như Câu c) chỉ có 1 dòng chữ đỏ ở cuối dạng 'Suy luận chặt chẽ và xác định đúng hết mới chấm điểm (0,5 điểm)' => TẠO ĐÚNG 1 BƯỚC với max_score = 0.5đ, trích xuất đầy đủ phép biến đổi và nghiệm (ví dụ: 'Câu c: Tính $P = A.B = -2 - \\frac{8}{x-4}$, tìm $x \\in \\{5;6;8;12;3;2;0;-4\\} \\Rightarrow x = 12$').\n\
-        3. CHÍNH XÁC ĐIỂM SỐ: max_score của mỗi bước BẮT BUỘC khớp 100% với con số mực đỏ (0.125, 0.25, 0.5, 0.75, 1.0,...).\n\
-        4. criteria: Nêu cụ thể điều kiện và dòng biến đổi tương ứng.";
+        1. 100% CÁC BƯỚC BẮT BUỘC CÓ TIỀN TỐ CÂU ('Câu a:', 'Câu b:', 'Câu c:'):\n\
+           - TUYỆT ĐỐI KHÔNG để bất kỳ bước nào trơ trọi thiếu tiền tố 'Câu a:', 'Câu b:', 'Câu c:'.\n\
+           - ĐẶC BIỆT VỚI BÀI HÌNH HỌC (Ví dụ Bài 5, Bài 6):\n\
+             * Bước vẽ hình: BẮT BUỘC ghi 'Câu a: Vẽ hình đúng' (hoặc gắn vào Câu a).\n\
+             * Mọi bước nhỏ thuộc ý 1/ý a (chứng minh góc vuông, tam giác đồng dạng, tỉ số, tích cạnh): TẤT CẢ ĐỀU PHẢI CÓ TIỀN TỐ 'Câu a:' (Ví dụ: 'Câu a: Chứng minh $\\widehat{BAC} = \\widehat{BHA} = 90^\\circ$', 'Câu a: Chứng minh $\\Delta ABC \\sim \\Delta HBA$', 'Câu a: Lập tỉ số $\\frac{BA}{BH} = \\frac{BC}{BA}$', 'Câu a: Kết luận $BA^2 = BH.BC$').\n\
+             * Mọi bước nhỏ thuộc ý 2/ý b: TẤT CẢ ĐỀU PHẢI CÓ TIỀN TỐ 'Câu b:' (Ví dụ: 'Câu b: Chứng minh $\\widehat{BEC} = \\widehat{BHF} = 90^\\circ$', 'Câu b: Chứng minh $\\Delta BEC \\sim \\Delta BHF$', 'Câu b: Lập tỉ số $\\frac{BE}{BH} = \\frac{BC}{BF}$', 'Câu b: Kết luận $BE.BF = BH.BC$').\n\
+             * Mọi bước thuộc ý 3/ý c: TẤT CẢ ĐỀU PHẢI CÓ TIỀN TỐ 'Câu c:'.\n\
+        2. TRÍCH XUẤT BIỂU THỨC & KÝ HIỆU TOÁN HỌC CHI TIẾT (ĐẶT TRONG $...$):\n\
+           - Sao chép chính xác biểu thức toán học, góc $\\widehat{...}$, tam giác $\\Delta...$, tỉ số $\\frac{...}{...}$, hệ thức vào step_title và criteria.\n\
+        3. BÀI TOÀN PHẦN (ALL-OR-NOTHING): Nếu một câu (như Câu c) chỉ có 1 dòng chữ đỏ ở cuối dạng 'Suy luận chặt chẽ và xác định đúng hết mới chấm điểm' => Tạo 1 bước duy nhất với max_score ghi trong ngoặc.\n\
+        4. max_score: Khớp chính xác 100% với con số mực đỏ (0.125, 0.25, 0.5, 0.75, 1.0,...).";
 
         let mut parts = Vec::new();
         parts.push(json!({"text": format!("Bài số: {} (Tổng điểm: {}đ)", q.question_number, q.max_score)}));
