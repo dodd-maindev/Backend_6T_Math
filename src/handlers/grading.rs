@@ -1,8 +1,6 @@
 use axum::{extract::{Multipart, Path, State}, http::StatusCode, Json};
 use serde_json::json;
 use sqlx::PgPool;
-use std::sync::Arc;
-use tokio::task::JoinSet;
 use uuid::Uuid;
 
 use crate::{
@@ -20,12 +18,12 @@ pub async fn list_student_submissions(
     Path(student_id): Path<Uuid>,
 ) -> Result<Json<Vec<StudentSubmissionWithDetails>>, (StatusCode, String)> {
     if user.role != "admin" && user.id != student_id { return Err((StatusCode::FORBIDDEN, "Forbidden".into())); }
-    let submissions = sqlx::query_as::<_, StudentSubmissionWithDetails>(
+    let subs = sqlx::query_as::<_, StudentSubmissionWithDetails>(
         "SELECT s.id, s.student_id, s.assignment_id, a.title as assignment_title, s.score, s.feedback, s.created_at \
          FROM student_submissions s JOIN assignments a ON s.assignment_id = a.id \
          WHERE s.student_id = $1 ORDER BY s.created_at DESC"
     ).bind(student_id).fetch_all(&pool).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Ok(Json(submissions))
+    Ok(Json(subs))
 }
 
 /// Evaluates a single question with Cloudflare Turnstile bot verification and attempt limiter.
@@ -62,7 +60,7 @@ pub async fn grade_submission(
     Ok((StatusCode::CREATED, Json(sub)))
 }
 
-/// Evaluates full exam with Cloudflare Turnstile bot verification and guaranteed complete evaluation.
+/// Evaluates full exam in a single fast multimodal request with Turnstile verification.
 pub async fn grade_full_exam(
     State(pool): State<PgPool>,
     user: AuthenticatedUser,
@@ -83,33 +81,16 @@ pub async fn grade_full_exam(
     ).bind(a_id).fetch_all(&pool).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     if questions.is_empty() { return Err((StatusCode::BAD_REQUEST, "No questions found".into()))?; }
     SubmissionLimiter::check_full_exam(&pool, &user.role, s_id, a_id, questions.len() as i64).await?;
-
-    let grader = Arc::new(GradingService::new().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?);
-    let transcripts = Arc::new(grader.transcribe_full_exam(&form.student_files).await.unwrap_or_default());
-    let sem = Arc::new(tokio::sync::Semaphore::new(3));
-    let mut set = JoinSet::new();
-
-    for q in questions {
-        let (g, t, s) = (Arc::clone(&grader), Arc::clone(&transcripts), Arc::clone(&sem));
-        set.spawn(async move {
-            let _permit = s.acquire().await.ok();
-            let default_work = "Học sinh không làm bài này.".to_string();
-            let tr = t.get(&q.question_number).unwrap_or(&default_work);
-            let res = g.grade_question_with_transcript(&q, tr).await;
-            (q.question_number, res)
-        });
-    }
-
+    let grader = GradingService::new().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+    let feedbacks = grader.grade_full_exam_direct(&questions, &form.student_files).await.map_err(|e| (StatusCode::BAD_GATEWAY, e))?;
     let mut saved_subs = Vec::new();
-    while let Some(res) = set.join_next().await {
-        if let Ok((_qn, Ok(mut fb))) = res {
-            fb["student_image_urls"] = json!(form.file_urls);
-            let score = fb["score"].as_f64().unwrap_or(0.0);
-            if let Ok(sub) = sqlx::query_as::<_, StudentSubmission>(
-                "INSERT INTO student_submissions (student_id, assignment_id, score, feedback) VALUES ($1, $2, $3, $4) RETURNING id, student_id, assignment_id, score, feedback, created_at"
-            ).bind(s_id).bind(a_id).bind(score).bind(&fb).fetch_one(&pool).await {
-                saved_subs.push(sub);
-            }
+    for mut fb in feedbacks {
+        fb["student_image_urls"] = json!(form.file_urls);
+        let score = fb["score"].as_f64().unwrap_or(0.0);
+        if let Ok(sub) = sqlx::query_as::<_, StudentSubmission>(
+            "INSERT INTO student_submissions (student_id, assignment_id, score, feedback) VALUES ($1, $2, $3, $4) RETURNING id, student_id, assignment_id, score, feedback, created_at"
+        ).bind(s_id).bind(a_id).bind(score).bind(&fb).fetch_one(&pool).await {
+            saved_subs.push(sub);
         }
     }
     saved_subs.sort_by_key(|s| s.feedback.as_ref().and_then(|f| f.get("question_number")).and_then(|v| v.as_i64()).unwrap_or(0));
