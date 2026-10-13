@@ -72,3 +72,16 @@ pub async fn get_my_classroom(
     .ok_or((StatusCode::NOT_FOUND, "No classroom mapped for student"))?;
     Ok(Json(classroom))
 }
+
+/// Endpoint for Admins to delete a classroom.
+pub async fn delete_classroom(
+    State(pool): State<PgPool>,
+    user: AuthenticatedUser,
+    Path(classroom_id): Path<Uuid>,
+) -> Result<StatusCode, (StatusCode, &'static str)> {
+    if user.role != "admin" { return Err((StatusCode::FORBIDDEN, "Admin required")); }
+    sqlx::query("DELETE FROM classrooms WHERE id = $1")
+        .bind(classroom_id).execute(&pool).await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to delete classroom"))?;
+    Ok(StatusCode::NO_CONTENT)
+}

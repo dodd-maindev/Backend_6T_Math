@@ -9,7 +9,7 @@ use tower_http::services::ServeDir;
 use crate::{
     config::Config,
     handlers::{
-        classroom::{create_classroom, get_my_classroom, list_classrooms, list_classroom_students},
+        classroom::{create_classroom, delete_classroom, get_my_classroom, list_classrooms, list_classroom_students},
         login::login,
         logout::logout,
         me::get_me,
@@ -39,6 +39,7 @@ pub fn create_router(pool: PgPool, config: Config) -> Router {
 
     let admin_routes = Router::new()
         .route("/classroom", post(create_classroom).get(list_classrooms))
+        .route("/classroom/:id", delete(delete_classroom))
         .route("/classroom/:id/students", get(list_classroom_students))
         .route("/student", post(create_student))
         .route("/student/:id", put(update_student))
