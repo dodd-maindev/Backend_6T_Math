@@ -6,60 +6,42 @@
     "rpm": 15,
     "rpd": 500,
     "tier": "High Capacity Flash-Lite",
-    "description": "Primary high-capacity fast inference model"
-  },
-  {
-    "id": "gemini-3.6-flash",
-    "name": "Gemini 3.6 Flash",
-    "priority": 2,
-    "rpm": 15,
-    "rpd": 500,
-    "tier": "Next-Gen Flash",
-    "description": "Advanced multimodal reasoning"
-  },
-  {
-    "id": "gemini-3.7-flash",
-    "name": "Gemini 3.7 Flash",
-    "priority": 3,
-    "rpm": 15,
-    "rpd": 500,
-    "tier": "Next-Gen Flash",
-    "description": "Latest flagship multimodal reasoning model"
-  },
-  {
-    "id": "gemini-flash-latest",
-    "name": "Gemini Flash Latest",
-    "priority": 4,
-    "rpm": 15,
-    "rpd": 500,
-    "tier": "Standard Flash",
-    "description": "Auto-updating latest stable flash"
-  },
-  {
-    "id": "gemini-pro-latest",
-    "name": "Gemini Pro Latest",
-    "priority": 6,
-    "rpm": 5,
-    "rpd": 50,
-    "tier": "Deep Reasoning Pro",
-    "description": "High intelligence deep reasoning"
-  },
-  {
-    "id": "gemini-3.1-pro-preview",
-    "name": "Gemini 3.1 Pro Preview",
-    "priority": 7,
-    "rpm": 5,
-    "rpd": 50,
-    "tier": "Deep Reasoning Pro",
-    "description": "Deep mathematical deduction model"
+    "description": "Primary high-capacity model (500 RPD / 15 RPM)"
   },
   {
     "id": "gemini-3.5-flash-lite",
     "name": "Gemini 3.5 Flash Lite",
-    "priority": 8,
+    "priority": 2,
     "rpm": 15,
     "rpd": 500,
     "tier": "High Capacity Flash-Lite",
-    "description": "Secondary high-capacity model with advanced reasoning"
+    "description": "Secondary high-capacity model (500 RPD / 15 RPM)"
+  },
+  {
+    "id": "gemini-3.6-flash",
+    "name": "Gemini 3.6 Flash",
+    "priority": 3,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Next-Gen Flash",
+    "description": "Advanced multimodal reasoning (20 RPD / 5 RPM)"
+  },
+  {
+    "id": "gemini-3.7-flash",
+    "name": "Gemini 3.7 Flash",
+    "priority": 4,
+    "rpm": 5,
+    "rpd": 20,
+    "tier": "Next-Gen Flash",
+    "description": "Flagship multimodal reasoning (20 RPD / 5 RPM)"
+  },
+  {
+    "id": "gemini-flash-latest",
+    "name": "Gemini Flash Latest",
+    "priority": 5,
+    "rpm": 15,
+    "rpd": 500,
+    "tier": "Standard Flash",
+    "description": "Auto-updating latest stable flash"
   }
 ]

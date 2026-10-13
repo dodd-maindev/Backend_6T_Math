@@ -43,12 +43,10 @@ impl ModelRegistry {
     fn default_model_ids() -> Vec<String> {
         vec![
             "gemini-3.1-flash-lite".to_string(),
+            "gemini-3.5-flash-lite".to_string(),
             "gemini-3.6-flash".to_string(),
             "gemini-3.7-flash".to_string(),
-            "gemini-3.5-flash-lite".to_string(),
-            "gemini-3-flash".to_string(),
-            "gemini-2.5-flash".to_string(),
-            "gemini-2.5-flash-lite".to_string(),
+            "gemini-flash-latest".to_string(),
         ]
     }
 }
