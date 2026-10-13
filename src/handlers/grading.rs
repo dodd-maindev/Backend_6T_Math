@@ -54,10 +54,9 @@ pub async fn grade_submission(
     feedback["student_image_urls"] = json!(form.file_urls);
     let score = feedback.get("allocated_score").and_then(|v| v.as_f64()).or_else(|| feedback.get("score").and_then(|v| v.as_f64())).unwrap_or(0.0);
     feedback["score"] = json!(score);
-
-    let sub = sqlx::query_as::<_, StudentSubmission>(
-        "INSERT INTO student_submissions (student_id, assignment_id, score, feedback) VALUES ($1, $2, $3, $4) RETURNING id, student_id, assignment_id, score, feedback, created_at"
-    ).bind(s_id).bind(a_id).bind(score).bind(&feedback).fetch_one(&pool).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    feedback["questions"] = json!([feedback.clone()]);
+    let sub = sqlx::query_as::<_, StudentSubmission>("INSERT INTO student_submissions (student_id, assignment_id, score, feedback) VALUES ($1, $2, $3, $4) RETURNING id, student_id, assignment_id, score, feedback, created_at")
+        .bind(s_id).bind(a_id).bind(score).bind(&feedback).fetch_one(&pool).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Ok((StatusCode::CREATED, Json(sub)))
 }
 
@@ -89,6 +88,7 @@ pub async fn grade_full_exam(
         fb["student_image_urls"] = json!(form.file_urls);
         let score = fb.get("allocated_score").and_then(|v| v.as_f64()).or_else(|| fb.get("score").and_then(|v| v.as_f64())).unwrap_or(0.0);
         fb["score"] = json!(score);
+        fb["questions"] = json!([fb.clone()]);
         if let Ok(sub) = sqlx::query_as::<_, StudentSubmission>(
             "INSERT INTO student_submissions (student_id, assignment_id, score, feedback) VALUES ($1, $2, $3, $4) RETURNING id, student_id, assignment_id, score, feedback, created_at"
         ).bind(s_id).bind(a_id).bind(score).bind(&fb).fetch_one(&pool).await {
