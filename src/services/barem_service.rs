@@ -9,19 +9,12 @@ pub struct BaremService;
 impl BaremService {
     /// Extracts canonical grading barem from teacher question and solution assets using Gemini.
     pub async fn extract_canonical_barem(client: &GeminiClient, q: &AssignmentQuestion) -> Result<Value, String> {
-        let sys = "Bạn là chuyên gia sư phạm Toán CLB 6T MATH. Nhiệm vụ: Đọc ảnh Lời giải mẫu & Barem điểm của Giáo viên, trích xuất chính xác cấu trúc Barem chấm điểm chuẩn dạng JSON.\n\
-        QUY TẮC BẮT BUỘC:\n\
-        1. 100% CÁC BƯỚC BẮT BUỘC CÓ TIỀN TỐ CÂU ('Câu a:', 'Câu b:', 'Câu c:'):\n\
-           - TUYỆT ĐỐI KHÔNG để bất kỳ bước nào trơ trọi thiếu tiền tố 'Câu a:', 'Câu b:', 'Câu c:'.\n\
-           - ĐẶC BIỆT VỚI BÀI HÌNH HỌC (Ví dụ Bài 5, Bài 6):\n\
-             * Bước vẽ hình: BẮT BUỘC ghi 'Câu a: Vẽ hình đúng' (hoặc gắn vào Câu a).\n\
-             * Mọi bước nhỏ thuộc ý 1/ý a (chứng minh góc vuông, tam giác đồng dạng, tỉ số, tích cạnh): TẤT CẢ ĐỀU PHẢI CÓ TIỀN TỐ 'Câu a:' (Ví dụ: 'Câu a: Chứng minh $\\widehat{BAC} = \\widehat{BHA} = 90^\\circ$', 'Câu a: Chứng minh $\\Delta ABC \\sim \\Delta HBA$', 'Câu a: Lập tỉ số $\\frac{BA}{BH} = \\frac{BC}{BA}$', 'Câu a: Kết luận $BA^2 = BH.BC$').\n\
-             * Mọi bước nhỏ thuộc ý 2/ý b: TẤT CẢ ĐỀU PHẢI CÓ TIỀN TỐ 'Câu b:' (Ví dụ: 'Câu b: Chứng minh $\\widehat{BEC} = \\widehat{BHF} = 90^\\circ$', 'Câu b: Chứng minh $\\Delta BEC \\sim \\Delta BHF$', 'Câu b: Lập tỉ số $\\frac{BE}{BH} = \\frac{BC}{BF}$', 'Câu b: Kết luận $BE.BF = BH.BC$').\n\
-             * Mọi bước thuộc ý 3/ý c: TẤT CẢ ĐỀU PHẢI CÓ TIỀN TỐ 'Câu c:'.\n\
-        2. TRÍCH XUẤT BIỂU THỨC & KÝ HIỆU TOÁN HỌC CHI TIẾT (ĐẶT TRONG $...$):\n\
-           - Sao chép chính xác biểu thức toán học, góc $\\widehat{...}$, tam giác $\\Delta...$, tỉ số $\\frac{...}{...}$, hệ thức vào step_title và criteria.\n\
-        3. BÀI TOÀN PHẦN (ALL-OR-NOTHING): Nếu một câu (như Câu c) chỉ có 1 dòng chữ đỏ ở cuối dạng 'Suy luận chặt chẽ và xác định đúng hết mới chấm điểm' => Tạo 1 bước duy nhất với max_score ghi trong ngoặc.\n\
-        4. max_score: Khớp chính xác 100% với con số mực đỏ (0.125, 0.25, 0.5, 0.75, 1.0,...).";
+        let sys = "Bạn là chuyên gia sư phạm Toán CLB 6T MATH. Nhiệm vụ: Đọc ảnh Lời giải & Barem của Giáo viên, trích xuất cấu trúc Barem chấm điểm chuẩn dạng JSON.\n\
+        QUY TẮC:\n\
+        1. TIỀN TỐ CÂU: Mỗi bước cần ghi rõ thuộc câu nào ('Câu a:', 'Câu b:', 'Câu c:', 'Phần 1: Trắc nghiệm'...). Đối với vẽ hình: ghi 'Câu a: Vẽ hình đúng'.\n\
+        2. KÝ HIỆU TOÁN: Biểu thức toán học, góc, tam giác, tỉ số đặt trong $...$.\n\
+        3. TRẮC NGHIỆM: Nếu là đáp án trắc nghiệm, trích xuất đầy đủ danh sách đáp án chuẩn từng câu (ví dụ: 1-D, 2-B, 3-C, ..., 15-C) vào tiêu chí (criteria).\n\
+        4. max_score: Khớp chính xác điểm từng bước theo Barem giáo viên (hoặc chia đều thang điểm đề ra).";
 
         let mut parts = Vec::new();
         parts.push(json!({"text": format!("Bài số: {} (Tổng điểm: {}đ)", q.question_number, q.max_score)}));
@@ -55,18 +48,23 @@ impl BaremService {
     }
 
     async fn append_images(parts: &mut Vec<Value>, q: &AssignmentQuestion) {
+        let mut seen = std::collections::HashSet::new();
         if let Some(Value::Array(arr)) = &q.solution_image_urls {
             for v in arr {
                 if let Some(s) = v.as_str() {
-                    if let Ok(b) = tokio::fs::read(format!(".{}", s)).await {
-                        parts.push(json!({"inlineData": {"mimeType": "image/jpeg", "data": STANDARD.encode(&b)}}));
+                    if seen.insert(s.to_string()) {
+                        if let Ok(b) = tokio::fs::read(format!(".{}", s)).await {
+                            let mime = if s.ends_with(".png") { "image/png" } else { "image/jpeg" };
+                            parts.push(json!({"inlineData": {"mimeType": mime, "data": STANDARD.encode(&b)}}));
+                        }
                     }
                 }
             }
         }
-        if !q.reference_image_url.is_empty() {
+        if !q.reference_image_url.is_empty() && seen.insert(q.reference_image_url.clone()) {
             if let Ok(b) = tokio::fs::read(format!(".{}", q.reference_image_url)).await {
-                parts.push(json!({"inlineData": {"mimeType": "image/jpeg", "data": STANDARD.encode(&b)}}));
+                let mime = if q.reference_image_url.ends_with(".png") { "image/png" } else { "image/jpeg" };
+                parts.push(json!({"inlineData": {"mimeType": mime, "data": STANDARD.encode(&b)}}));
             }
         }
     }

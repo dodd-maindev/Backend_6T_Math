@@ -40,7 +40,9 @@ pub fn build_barem_extraction_payload(sys: &str, parts: Vec<Value>) -> Value {
     json!({
         "systemInstruction": {"parts": [{"text": sys}]}, "contents": [{"parts": parts}],
         "generationConfig": {
-            "temperature": 0.0, "topP": 0.1, "seed": 42, "responseMimeType": "application/json",
+            "temperature": 0.0, "topP": 0.1, "seed": 42,
+            "thinkingConfig": {"thinkingBudget": 0},
+            "responseMimeType": "application/json",
             "responseSchema": {
                 "type": "OBJECT",
                 "properties": {
