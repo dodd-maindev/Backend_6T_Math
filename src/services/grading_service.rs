@@ -21,12 +21,16 @@ impl GradingService {
     pub async fn grade_full_exam_direct(&self, questions: &[AssignmentQuestion], files: &[StudentFilePayload]) -> Result<Vec<Value>, String> {
         let sys = tokio::fs::read_to_string("prompts/grading_system_prompt.txt").await.unwrap_or_default();
         let mut parts = Vec::new();
-        let barem_summary = questions.iter().map(|q| json!({
-            "question_number": q.question_number, "title": format!("Bài {}", q.question_number),
-            "max_score": q.max_score, "barem": q.barem_json
-        })).collect::<Vec<_>>();
-        parts.push(json!({"text": format!("=== [KHUNG BAREM ĐỀ THI] ===\n{}\n============================", serde_json::to_string_pretty(&barem_summary).unwrap_or_default())}));
-
+        parts.push(json!({"text": "=== [KHUNG BAREM VÀ ĐÁP ÁN CHUẨN CỦA GIÁO VIÊN] ==="}));
+        for q in questions {
+            let info = json!({
+                "question_number": q.question_number, "title": format!("Bài {}", q.question_number),
+                "max_score": q.max_score, "note": q.native_prompt, "barem": q.barem_json
+            });
+            parts.push(json!({"text": format!("Bài {}:\n{}", q.question_number, serde_json::to_string_pretty(&info).unwrap_or_default())}));
+            self.append_solution_images(&mut parts, q).await;
+        }
+        parts.push(json!({"text": "=== [BÀI LÀM CỦA HỌC SINH] ==="}));
         for (idx, f) in files.iter().enumerate() {
             parts.push(json!({"text": format!("Trang ({}/{}):", idx + 1, files.len())}));
             parts.push(json!({"inlineData": {"mimeType": f.mime_type.clone(), "data": f.base64_data.clone()}}));
@@ -59,8 +63,9 @@ impl GradingService {
     pub async fn grade_question(&self, q: &AssignmentQuestion, files: &[StudentFilePayload], _targeted: bool) -> Result<Value, String> {
         let sys = tokio::fs::read_to_string("prompts/grading_system_prompt.txt").await.unwrap_or_default();
         let mut parts = Vec::new();
-        parts.push(json!({"text": format!("=== [CHUẨN MỰC BÀI SỐ {} (TỔNG: {} ĐIỂM)] ===", q.question_number, q.max_score)}));
-        self.append_question_assets(&mut parts, q).await;
+        let info = json!({ "question_number": q.question_number, "max_score": q.max_score, "note": q.native_prompt, "barem": q.barem_json });
+        parts.push(json!({"text": format!("=== [CHUẨN MỰC BÀI SỐ {}] ===\n{}", q.question_number, serde_json::to_string_pretty(&info).unwrap_or_default())}));
+        self.append_solution_images(&mut parts, q).await;
         for (idx, f) in files.iter().enumerate() {
             parts.push(json!({"text": format!("Trang ({}/{}):", idx + 1, files.len())}));
             parts.push(json!({"inlineData": {"mimeType": f.mime_type.clone(), "data": f.base64_data.clone()}}));
@@ -72,10 +77,7 @@ impl GradingService {
         Ok(feedback)
     }
 
-    async fn append_question_assets(&self, parts: &mut Vec<Value>, question: &AssignmentQuestion) {
-        if let Some(barem) = &question.barem_json {
-            parts.push(json!({"text": format!("=== [BAREM GIÁO VIÊN] ===\n{}\n========================", serde_json::to_string_pretty(barem).unwrap_or_default())}));
-        }
+    async fn append_solution_images(&self, parts: &mut Vec<Value>, question: &AssignmentQuestion) {
         let mut sol_urls = Vec::new();
         if let Some(Value::Array(arr)) = &question.solution_image_urls {
             for v in arr { if let Some(s) = v.as_str() { sol_urls.push(s.to_string()); } }
@@ -84,8 +86,9 @@ impl GradingService {
             sol_urls.push(question.reference_image_url.clone());
         }
         for url in &sol_urls {
+            let mime = if url.ends_with(".png") { "image/png" } else { "image/jpeg" };
             if let Ok(b) = tokio::fs::read(format!(".{}", url)).await {
-                parts.push(json!({"inlineData": {"mimeType": "image/jpeg", "data": STANDARD.encode(&b)}}));
+                parts.push(json!({"inlineData": {"mimeType": mime, "data": STANDARD.encode(&b)}}));
             }
         }
     }

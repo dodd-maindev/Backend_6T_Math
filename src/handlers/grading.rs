@@ -52,7 +52,8 @@ pub async fn grade_submission(
     let grader = GradingService::new().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
     let mut feedback = grader.grade_question(question, &form.student_files, true).await.map_err(|e| (StatusCode::BAD_GATEWAY, e))?;
     feedback["student_image_urls"] = json!(form.file_urls);
-    let score = feedback["score"].as_f64().unwrap_or(0.0);
+    let score = feedback.get("allocated_score").and_then(|v| v.as_f64()).or_else(|| feedback.get("score").and_then(|v| v.as_f64())).unwrap_or(0.0);
+    feedback["score"] = json!(score);
 
     let sub = sqlx::query_as::<_, StudentSubmission>(
         "INSERT INTO student_submissions (student_id, assignment_id, score, feedback) VALUES ($1, $2, $3, $4) RETURNING id, student_id, assignment_id, score, feedback, created_at"
@@ -86,7 +87,8 @@ pub async fn grade_full_exam(
     let mut saved_subs = Vec::new();
     for mut fb in feedbacks {
         fb["student_image_urls"] = json!(form.file_urls);
-        let score = fb["score"].as_f64().unwrap_or(0.0);
+        let score = fb.get("allocated_score").and_then(|v| v.as_f64()).or_else(|| fb.get("score").and_then(|v| v.as_f64())).unwrap_or(0.0);
+        fb["score"] = json!(score);
         if let Ok(sub) = sqlx::query_as::<_, StudentSubmission>(
             "INSERT INTO student_submissions (student_id, assignment_id, score, feedback) VALUES ($1, $2, $3, $4) RETURNING id, student_id, assignment_id, score, feedback, created_at"
         ).bind(s_id).bind(a_id).bind(score).bind(&fb).fetch_one(&pool).await {
