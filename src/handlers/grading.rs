@@ -33,13 +33,12 @@ pub async fn grade_submission(
     multipart: Multipart,
 ) -> Result<(StatusCode, Json<StudentSubmission>), (StatusCode, String)> {
     let form = parse_submission_form(multipart).await.map_err(|e| (StatusCode::BAD_REQUEST, e))?;
-    let s_id = form.student_id.ok_or((StatusCode::BAD_REQUEST, "Missing student_id".into()))?;
-    let a_id = form.assignment_id.ok_or((StatusCode::BAD_REQUEST, "Missing assignment_id".into()))?;
+    let (s_id, a_id) = (form.student_id.ok_or((StatusCode::BAD_REQUEST, "Missing student_id".into()))?, form.assignment_id.ok_or((StatusCode::BAD_REQUEST, "Missing assignment_id".into()))?);
     if user.role != "admin" && user.id != s_id { return Err((StatusCode::FORBIDDEN, "Forbidden".into())); }
     if form.student_files.is_empty() { return Err((StatusCode::BAD_REQUEST, "Missing files".into())); }
-
-    let cf_secret = std::env::var("CLOUDFLARE_TURNSTILE_SECRET_KEY").unwrap_or_default();
-    verify_turnstile_token(&cf_secret, form.turnstile_token.as_deref().unwrap_or(""), None).await.map_err(|e| (StatusCode::FORBIDDEN, e))?;
+    if user.role != "admin" {
+        verify_turnstile_token(&std::env::var("CLOUDFLARE_TURNSTILE_SECRET_KEY").unwrap_or_default(), form.turnstile_token.as_deref().unwrap_or(""), None).await.map_err(|e| (StatusCode::FORBIDDEN, e))?;
+    }
 
     let questions = sqlx::query_as::<_, AssignmentQuestion>(
         "SELECT id, assignment_id, question_number, reference_image_url, question_image_urls, solution_image_urls, native_prompt, max_score, barem_json, created_at \
@@ -67,13 +66,12 @@ pub async fn grade_full_exam(
     multipart: Multipart,
 ) -> Result<(StatusCode, Json<Vec<StudentSubmission>>), (StatusCode, String)> {
     let form = parse_submission_form(multipart).await.map_err(|e| (StatusCode::BAD_REQUEST, e))?;
-    let s_id = form.student_id.ok_or((StatusCode::BAD_REQUEST, "Missing student_id".into()))?;
-    let a_id = form.assignment_id.ok_or((StatusCode::BAD_REQUEST, "Missing assignment_id".into()))?;
+    let (s_id, a_id) = (form.student_id.ok_or((StatusCode::BAD_REQUEST, "Missing student_id".into()))?, form.assignment_id.ok_or((StatusCode::BAD_REQUEST, "Missing assignment_id".into()))?);
     if user.role != "admin" && user.id != s_id { return Err((StatusCode::FORBIDDEN, "Forbidden".into())); }
     if form.student_files.is_empty() { return Err((StatusCode::BAD_REQUEST, "Missing files".into())); }
-
-    let cf_secret = std::env::var("CLOUDFLARE_TURNSTILE_SECRET_KEY").unwrap_or_default();
-    verify_turnstile_token(&cf_secret, form.turnstile_token.as_deref().unwrap_or(""), None).await.map_err(|e| (StatusCode::FORBIDDEN, e))?;
+    if user.role != "admin" {
+        verify_turnstile_token(&std::env::var("CLOUDFLARE_TURNSTILE_SECRET_KEY").unwrap_or_default(), form.turnstile_token.as_deref().unwrap_or(""), None).await.map_err(|e| (StatusCode::FORBIDDEN, e))?;
+    }
 
     let questions = sqlx::query_as::<_, AssignmentQuestion>(
         "SELECT id, assignment_id, question_number, reference_image_url, question_image_urls, solution_image_urls, native_prompt, max_score, barem_json, created_at \

@@ -14,7 +14,7 @@ impl SubmissionLimiter {
         assignment_id: Uuid,
         question_number: i32,
     ) -> Result<(), (StatusCode, String)> {
-        let max_attempts = if role == "admin" { 10 } else { 5 };
+        let max_attempts = if role == "admin" { 500 } else { 5 };
         let count: i64 = sqlx::query_scalar(
             "SELECT count(*) FROM student_submissions \
              WHERE student_id = $1 AND assignment_id = $2 AND (feedback->>'question_number')::int = $3"
@@ -40,7 +40,7 @@ impl SubmissionLimiter {
         assignment_id: Uuid,
         total_questions: i64,
     ) -> Result<(), (StatusCode, String)> {
-        let per_question_limit = if role == "admin" { 10 } else { 5 };
+        let per_question_limit = if role == "admin" { 500 } else { 5 };
         let max_total_attempts = (per_question_limit * total_questions).max(per_question_limit);
         let count: i64 = sqlx::query_scalar(
             "SELECT count(*) FROM student_submissions WHERE student_id = $1 AND assignment_id = $2"
